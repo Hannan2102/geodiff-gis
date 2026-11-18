@@ -1,0 +1,28 @@
+# Python
+__pycache__/
+*.pyc
+.venv/
+.mypy_cache/
+.ruff_cache/
+.pytest_cache/
+.coverage
+htmlcov/
+
+# Node
+node_modules/
+web/dist/
+web/test-results/
+web/playwright-report/
+web/blob-report/
+
+# Env and local data
+.env
+.env.*
+!.env.example
+*.local
+/var/
+/tmp/
+.DS_Store
+
+# Benchmarks and scratch outputs
+/bench-out/

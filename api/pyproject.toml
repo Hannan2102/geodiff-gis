@@ -1,0 +1,58 @@
+[project]
+name = "geodiff"
+version = "0.1.0"
+description = "Reconcile a field inventory of point assets against an approved baseline."
+requires-python = ">=3.12,<3.13"
+license = { text = "MIT" }
+dependencies = [
+  "fastapi==0.165.0",
+  "uvicorn[standard]==0.54.0",
+  "psycopg[binary]==3.3.9",
+  "psycopg-pool==3.3.3",
+  "pydantic-settings==2.16.3",
+  "shapely==2.2.0",
+  "pyproj==3.8.0",
+]
+
+[project.optional-dependencies]
+# GeoPandas is used by fixture generation and independent verification, not by the API server.
+analysis = ["geopandas==1.2.0"]
+
+[project.scripts]
+geodiff = "geodiff.cli:main"
+
+[dependency-groups]
+dev = [
+  "ruff==0.17.5",
+  "mypy==2.4.1",
+  "pytest==9.2.0",
+  "httpx==0.28.1",
+]
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.hatch.build.targets.wheel]
+packages = ["geodiff"]
+
+[tool.ruff]
+line-length = 100
+target-version = "py312"
+
+[tool.ruff.lint]
+select = ["E", "F", "W", "I", "B", "UP", "S", "SIM", "RUF"]
+ignore = ["S101"]
+
+[tool.ruff.lint.per-file-ignores]
+"tests/**" = ["S", "B"]
+
+[tool.mypy]
+python_version = "3.12"
+strict = true
+packages = ["geodiff"]
+ignore_missing_imports = true
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+markers = ["db: requires a reachable PostGIS database (DATABASE_URL)"]

@@ -1,0 +1,22 @@
+:root {
+  --paper: #f5f2e9;
+  --ink: #202a2a;
+  --ink-soft: #4a5555;
+  --rule: #d9d3c3;
+  --teal: #0f6b62;
+  --rust: #a4441f;
+  --cobalt: #2346a0;
+  --plum: #6b2f63;
+  --font-sans: 'Source Sans 3', 'Segoe UI', system-ui, -apple-system, sans-serif;
+  --font-mono: 'IBM Plex Mono', ui-monospace, 'SF Mono', Menlo, monospace;
+  color-scheme: light;
+}
+* { box-sizing: border-box; }
+body { margin: 0; background: var(--paper); color: var(--ink); font-family: var(--font-sans); }
+.mono, code { font-family: var(--font-mono); }
+.boot { max-width: 44rem; margin: 4rem auto; padding: 0 1rem; }
+.status { border: 1px solid var(--ink); padding: 1rem; background: #fffdf7; }
+[data-state='ready'] strong { color: var(--teal); }
+[data-state='degraded'] strong, [data-state='unreachable'] strong { color: var(--rust); }
+button { font: inherit; border: 1px solid var(--ink); background: var(--paper); padding: 0.35rem 0.8rem; cursor: pointer; }
+button:focus-visible { outline: 3px solid var(--cobalt); outline-offset: 2px; }
