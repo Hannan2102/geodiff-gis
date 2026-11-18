@@ -20,6 +20,20 @@ class Settings(BaseSettings):
     log_level: str = "info"
     git_sha: str = "dev"
 
+    # Public-demo bounds (see docs/API.md, "Limits").
+    max_upload_bytes: int = 5 * 1024 * 1024
+    max_features: int = 10_000
+    max_datasets_per_workspace: int = 12
+    max_comparisons_per_workspace: int = 30
+    max_active_workspaces: int = 200
+    workspace_ttl_hours: int = 72
+    page_max: int = 200
+    map_max_features: int = 2_000
+    bulk_max: int = 5_000
+    rate_limit_writes_per_min: int = 120
+    rate_limit_workspaces_per_hour: int = 20
+    trust_forwarded_for: bool = False  # True only behind a known proxy (Render, nginx)
+
     @property
     def cors_origin_list(self) -> list[str]:
         return [o.strip() for o in self.cors_origins.split(",") if o.strip()]

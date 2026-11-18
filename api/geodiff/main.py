@@ -19,6 +19,7 @@ from geodiff import __version__
 from geodiff.config import get_settings
 from geodiff.db import close_pool, get_pool
 from geodiff.migrate import migration_files
+from geodiff.routes import router
 
 log = logging.getLogger("geodiff.api")
 
@@ -44,7 +45,7 @@ app = FastAPI(
 app.add_middleware(
     CORSMiddleware,
     allow_origins=get_settings().cors_origin_list,
-    allow_methods=["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+    allow_methods=["GET", "POST", "DELETE", "OPTIONS"],
     allow_headers=["Authorization", "Content-Type", "If-Match", "X-Request-ID"],
     expose_headers=["X-Request-ID", "ETag"],
     max_age=600,
@@ -146,3 +147,6 @@ def ready(response: Response) -> dict[str, Any]:
         "version": __version__,
         "git_sha": get_settings().git_sha,
     }
+
+
+app.include_router(router)

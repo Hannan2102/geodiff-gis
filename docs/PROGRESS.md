@@ -70,4 +70,35 @@ GitHub sync
   `.github/workflows/ci.yml`. Unblock with `gh auth refresh -h github.com -s workflow`.
   Phase commits are kept locally and will be pushed in order.
 
-Next: Phase 3, persistent review API.
+## Phase 3: Persistent review API (implemented, tested)
+
+Completed behavior (details in [API.md](API.md))
+- Migration `0002_review_schema`: workspaces, datasets (original bytes and SHA-256),
+  immutable snapshots, features (unique per snapshot and asset; GIST), comparisons (revision,
+  lineage), change_components (GIST on from/to), comparison_assets, decisions (versioned;
+  flagged requires a note), review_events (append-only; unique per component version).
+- Anonymous workspaces: bearer token, only its SHA-256 stored, 72 h sliding expiry with purge,
+  reset and delete; cross-workspace access returns 404.
+- Streaming upload limit (413), media-type check (415), duplicate-import dedupe, sampled
+  validation, rate limits, capacity limits.
+- Comparison runs with lineage; paginated queue; viewport map and baseline queries; evidence
+  per asset; atomic versioned decisions; bulk preview with count-confirmed apply; undo by
+  revision; history; draft/final export with report.
+
+Commands and results (2026-11-18)
+- `make check-api`: **107 passed** (21 new API integration tests against PostGIS 3.5).
+  Covered: partial BENCH-0142 decision (attribute accepted, location kept); accepted, rejected
+  and pending additions and deletions; cross-workspace denial on 9 endpoints; expiry and
+  purge; duplicate import; restart via pool close; stale-tab 409 with atomic rollback; 4
+  concurrent identical decisions (1 succeeds, 3 conflict); bulk count mismatch; undo with
+  stale revision; final export blocked then equal to the golden file; re-import of the export.
+- `scripts/api_walkthrough.py` against compose, then `docker compose restart api db`, then
+  `--verify`: decisions persisted; the final export over HTTP equals
+  `expected_reviewed.geojson`; workspace deleted.
+- `scripts/load_5000.py`: API RSS 57 → 91 MiB; compare 0.60 s; queue 0.04 s; viewport 0.09 s.
+
+Limitations
+- The rate limiter is in-process (one instance). Expired workspaces are purged when a new
+  workspace is created, not on a schedule.
+
+Next: Phase 4, interactive review studio.
