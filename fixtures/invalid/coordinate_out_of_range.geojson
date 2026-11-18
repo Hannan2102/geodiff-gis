@@ -1,0 +1,18 @@
+{
+ "type": "FeatureCollection",
+ "features": [
+  {
+   "type": "Feature",
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     2484210.5,
+     6969120.25
+    ]
+   },
+   "properties": {
+    "asset_id": "BENCH-0001"
+   }
+  }
+ ]
+}

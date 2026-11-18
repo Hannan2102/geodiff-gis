@@ -1,0 +1,31 @@
+{
+ "type": "FeatureCollection",
+ "features": [
+  {
+   "type": "Feature",
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     -96.8,
+     32.78
+    ]
+   },
+   "properties": {
+    "asset_id": 142
+   }
+  },
+  {
+   "type": "Feature",
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     -96.79,
+     32.78
+    ]
+   },
+   "properties": {
+    "asset_id": "142"
+   }
+  }
+ ]
+}

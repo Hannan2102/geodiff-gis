@@ -1,0 +1,35 @@
+{
+  "note": "Hand-authored expectation for golden/baseline.geojson vs golden/proposed.geojson. Written from the fixture design, not from engine output.",
+  "parameters": {
+    "id_field": "asset_id",
+    "compared_fields": ["condition", "install_year", "material", "notes"],
+    "tolerance_m": 2.0
+  },
+  "summary": {
+    "affected_assets": 8,
+    "components": 9,
+    "components_by_kind": {"addition": 1, "deletion": 1, "move": 2, "attribute": 5},
+    "within_tolerance_moves": 2,
+    "unchanged_assets": 6
+  },
+  "components": [
+    {"id": "BENCH-0142:move", "kind": "move", "approx_distance_m": [118.0, 121.0], "patch": {"op": "set_coordinates", "coordinates": [-96.79676, 32.785412]}},
+    {"id": "BENCH-0142:attr:condition", "kind": "attribute", "old": "good", "new": "damaged", "patch": {"op": "set_property", "key": "condition", "value": "damaged"}},
+    {"id": "BENCH-0901:addition", "kind": "addition"},
+    {"id": "BIKE-0012:attr:install_year", "kind": "attribute", "old": 2019, "new": "2019", "patch": {"op": "set_property", "key": "install_year", "value": "2019"}},
+    {"id": "FOUNT-0009:deletion", "kind": "deletion", "patch": {"op": "remove"}},
+    {"id": "SIGN-0050:attr:notes", "kind": "attribute", "old": null, "old_present": true, "new_present": false, "patch": {"op": "delete_property", "key": "notes"}},
+    {"id": "SIGN-0051:attr:notes", "kind": "attribute", "old_present": false, "new": null, "new_present": true, "patch": {"op": "set_property", "key": "notes", "value": null}},
+    {"id": "TABLE-0003:attr:material", "kind": "attribute", "old": "wood", "new": "recycled plastic", "patch": {"op": "set_property", "key": "material", "value": "recycled plastic"}},
+    {"id": "TREE-0310:move", "kind": "move", "approx_distance_m": [2.05, 2.15], "patch": {"op": "set_coordinates", "coordinates": [-96.79744, 32.782129]}}
+  ],
+  "not_changes": {
+    "TRASH-0007": "identical control",
+    "LIGHT-0021": "0.50 m jitter, below the 2 m tolerance",
+    "SIGN-0044": "about 1.94 m, just below the 2 m tolerance",
+    "TREE-0311": "only the nested, unselected 'maintenance' property changed",
+    "LIGHT-0022": "only the importer timestamp 'imported_at' changed",
+    "TABLE-0004": "install_year 2010 vs 2010.0 are the same JSON number",
+    "TABLE-0003 last_inspected": "unselected field; baseline value is kept"
+  }
+}

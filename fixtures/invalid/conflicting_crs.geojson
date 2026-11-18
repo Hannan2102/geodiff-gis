@@ -1,0 +1,24 @@
+{
+ "type": "FeatureCollection",
+ "crs": {
+  "type": "name",
+  "properties": {
+   "name": "urn:ogc:def:crs:EPSG::2276"
+  }
+ },
+ "features": [
+  {
+   "type": "Feature",
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     -96.8,
+     32.78
+    ]
+   },
+   "properties": {
+    "asset_id": "BENCH-0001"
+   }
+  }
+ ]
+}

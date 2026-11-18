@@ -133,6 +133,7 @@ version = "0.1.0"
 source = { editable = "." }
 dependencies = [
     { name = "fastapi" },
+    { name = "numpy" },
     { name = "psycopg", extra = ["binary"] },
     { name = "psycopg-pool" },
     { name = "pydantic-settings" },
@@ -158,6 +159,7 @@ dev = [
 requires-dist = [
     { name = "fastapi", specifier = "==0.165.0" },
     { name = "geopandas", marker = "extra == 'analysis'", specifier = "==1.2.0" },
+    { name = "numpy", specifier = "==2.5.5" },
     { name = "psycopg", extras = ["binary"], specifier = "==3.3.9" },
     { name = "psycopg-pool", specifier = "==3.3.3" },
     { name = "pydantic-settings", specifier = "==2.16.3" },

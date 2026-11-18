@@ -1,5 +1,5 @@
 # GeoDiff developer commands. See docs/SETUP.md.
-.PHONY: up down logs migrate dev-db dev-api dev-web check check-api check-web test e2e
+.PHONY: up down logs migrate dev-db dev-api dev-web check check-api check-web test e2e fixtures
 
 LOCAL_DB := postgresql://geodiff:geodiff-local-dev@localhost:5433/geodiff
 UV := env -u VIRTUAL_ENV uv
@@ -36,3 +36,7 @@ check-web:
 
 e2e: up        ## Browser tests against the composed stack
 	cd web && npx playwright test
+
+fixtures:      ## Regenerate synthetic fixtures, context layers and invalid examples
+	cd api && $(UV) run geodiff generate --out ../fixtures
+	python3 scripts/make_invalid_fixtures.py

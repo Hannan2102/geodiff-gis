@@ -1,0 +1,33 @@
+{
+  "type": "FeatureCollection",
+  "name": "golden_2026-11_field",
+  "geodiff:source": {"synthetic": true, "note": "SYNTHETIC hand-authored golden fixture for the fictional Cedar Hollow Parks Department. Not real city data."},
+  "features": [
+    {"type": "Feature", "geometry": {"type": "Point", "coordinates": [-96.79600, 32.78330]},
+     "properties": {"asset_id": "TABLE-0004", "asset_type": "picnic_table", "park": "Pecan Hollow Park", "condition": "good", "material": "concrete", "install_year": 2010.0, "imported_at": "2026-11-01T06:00:00Z"}},
+    {"type": "Feature", "geometry": {"type": "Point", "coordinates": [-96.79540, 32.78440]},
+     "properties": {"asset_id": "LIGHT-0022", "asset_type": "light_pole", "park": "Pecan Hollow Park", "condition": "good", "material": "steel", "install_year": 2016, "imported_at": "2026-11-01T06:00:00Z"}},
+    {"type": "Feature", "geometry": {"type": "Point", "coordinates": [-96.79700, 32.78150]},
+     "properties": {"asset_id": "TREE-0311", "asset_type": "tree", "park": "Pecan Hollow Park", "condition": "good", "material": "n/a", "install_year": 2011, "maintenance": {"crew": "North", "contract": "PR-2026-02"}, "imported_at": "2026-11-01T06:00:00Z"}},
+    {"type": "Feature", "geometry": {"type": "Point", "coordinates": [-96.79470, 32.78300]},
+     "properties": {"asset_id": "BIKE-0012", "asset_type": "bike_rack", "park": "Pecan Hollow Park", "condition": "good", "material": "steel", "install_year": "2019", "imported_at": "2026-11-01T06:00:00Z"}},
+    {"type": "Feature", "geometry": {"type": "Point", "coordinates": [-96.79860, 32.78372]},
+     "properties": {"asset_id": "SIGN-0051", "asset_type": "sign", "park": "Pecan Hollow Park", "condition": "good", "material": "wood", "install_year": 2020, "notes": null, "imported_at": "2026-11-01T06:00:00Z"}},
+    {"type": "Feature", "geometry": {"type": "Point", "coordinates": [-96.79870, 32.78360]},
+     "properties": {"asset_id": "SIGN-0050", "asset_type": "sign", "park": "Pecan Hollow Park", "condition": "good", "material": "wood", "install_year": 2020, "imported_at": "2026-11-01T06:00:00Z"}},
+    {"type": "Feature", "geometry": {"type": "Point", "coordinates": [-96.79420, 32.78480]},
+     "properties": {"asset_id": "BENCH-0901", "asset_type": "bench", "park": "Pecan Hollow Park", "condition": "good", "material": "recycled plastic", "install_year": 2026, "notes": "Installed October 2026.", "imported_at": "2026-11-01T06:00:00Z"}},
+    {"type": "Feature", "geometry": {"type": "Point", "coordinates": [-96.79560, 32.78250]},
+     "properties": {"asset_id": "TABLE-0003", "asset_type": "picnic_table", "park": "Pecan Hollow Park", "condition": "fair", "material": "recycled plastic", "install_year": 2012, "last_inspected": "2026-10-20", "imported_at": "2026-11-01T06:00:00Z"}},
+    {"type": "Feature", "geometry": {"type": "Point", "coordinates": [-96.79902, 32.7846775]},
+     "properties": {"asset_id": "SIGN-0044", "asset_type": "sign", "park": "Pecan Hollow Park", "condition": "good", "material": "aluminum", "install_year": 2021, "imported_at": "2026-11-01T06:00:00Z"}},
+    {"type": "Feature", "geometry": {"type": "Point", "coordinates": [-96.79744, 32.782129]},
+     "properties": {"asset_id": "TREE-0310", "asset_type": "tree", "park": "Pecan Hollow Park", "condition": "good", "material": "n/a", "install_year": 2008, "notes": "Live oak.", "maintenance": {"crew": "Central", "contract": "PR-2024-11"}, "imported_at": "2026-11-01T06:00:00Z"}},
+    {"type": "Feature", "geometry": {"type": "Point", "coordinates": [-96.79512, 32.7839045]},
+     "properties": {"asset_id": "LIGHT-0021", "asset_type": "light_pole", "park": "Pecan Hollow Park", "condition": "good", "material": "aluminum", "install_year": 2016, "imported_at": "2026-11-01T06:00:00Z"}},
+    {"type": "Feature", "geometry": {"type": "Point", "coordinates": [-96.79810, 32.78305]},
+     "properties": {"asset_id": "TRASH-0007", "asset_type": "trash_can", "park": "Pecan Hollow Park", "condition": "fair", "material": "steel", "install_year": 2019, "notes": null, "imported_at": "2026-11-01T06:00:00Z"}},
+    {"type": "Feature", "geometry": {"type": "Point", "coordinates": [-96.79676, 32.785412]},
+     "properties": {"asset_id": "BENCH-0142", "asset_type": "bench", "park": "Pecan Hollow Park", "condition": "damaged", "material": "wood", "install_year": 2014, "last_inspected": "2026-09-14", "notes": "Faces the north lawn.", "maintenance": {"crew": "Central", "contract": "PR-2025-07"}, "imported_at": "2026-11-01T06:00:00Z"}}
+  ]
+}

@@ -1,0 +1,24 @@
+{
+ "type": "FeatureCollection",
+ "features": [
+  {
+   "type": "Feature",
+   "geometry": {
+    "type": "LineString",
+    "coordinates": [
+     [
+      -96.8,
+      32.78
+     ],
+     [
+      -96.79,
+      32.78
+     ]
+    ]
+   },
+   "properties": {
+    "asset_id": "PATH-1"
+   }
+  }
+ ]
+}

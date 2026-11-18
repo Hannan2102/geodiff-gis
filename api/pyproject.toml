@@ -12,6 +12,7 @@ dependencies = [
   "pydantic-settings==2.16.3",
   "shapely==2.2.0",
   "pyproj==3.8.0",
+  "numpy==2.5.5",
 ]
 
 [project.optional-dependencies]
@@ -42,10 +43,11 @@ target-version = "py312"
 
 [tool.ruff.lint]
 select = ["E", "F", "W", "I", "B", "UP", "S", "SIM", "RUF"]
-ignore = ["S101"]
+ignore = ["S101", "E501"]
 
 [tool.ruff.lint.per-file-ignores]
 "tests/**" = ["S", "B"]
+"geodiff/synth.py" = ["S311"]  # seeded, reproducible fixtures; not security-relevant
 
 [tool.mypy]
 python_version = "3.12"

@@ -1,0 +1,11 @@
+{
+  "BENCH-0142:attr:condition": {"disposition": "accepted", "decided_at": "2026-11-18T15:00:00Z"},
+  "BENCH-0142:move": {"disposition": "rejected", "note": "Reported position falls across 11th St in a residential block; bench is anchored in Pecan Hollow Park.", "decided_at": "2026-11-18T15:00:30Z"},
+  "BENCH-0901:addition": {"disposition": "accepted", "decided_at": "2026-11-18T15:01:00Z"},
+  "BIKE-0012:attr:install_year": {"disposition": "rejected", "note": "Type drift from the field app; keep the numeric year.", "decided_at": "2026-11-18T15:01:30Z"},
+  "FOUNT-0009:deletion": {"disposition": "accepted", "decided_at": "2026-11-18T15:02:00Z"},
+  "SIGN-0050:attr:notes": {"disposition": "accepted", "decided_at": "2026-11-18T15:02:30Z"},
+  "SIGN-0051:attr:notes": {"disposition": "rejected", "decided_at": "2026-11-18T15:03:00Z"},
+  "TABLE-0003:attr:material": {"disposition": "accepted", "decided_at": "2026-11-18T15:03:30Z"},
+  "TREE-0310:move": {"disposition": "accepted", "decided_at": "2026-11-18T15:04:00Z"}
+}
