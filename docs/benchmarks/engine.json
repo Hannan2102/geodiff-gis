@@ -1,0 +1,296 @@
+{
+  "environment": {
+    "cpu": "Apple M1",
+    "cores": "8",
+    "memory_gb": 8.0,
+    "os": "macOS 26.5.2 (arm64)",
+    "python": "3.12.14",
+    "geodiff": "0.1.0",
+    "pyproj": "3.8.0",
+    "proj": "9.8.1",
+    "shapely": "2.2.0",
+    "numpy": "2.5.5",
+    "docker": "29.7.2, 8 CPUs, 4106604544 bytes",
+    "git_sha": "0726a10",
+    "date": "2026-11-18"
+  },
+  "seed": 20261118,
+  "results": {
+    "1000": {
+      "input_mb": 0.81,
+      "baseline_features": 1000,
+      "proposed_features": 1002,
+      "parse_both": {
+        "median_s": 0.0144,
+        "min_s": 0.0142,
+        "max_s": 0.0228,
+        "runs": 7
+      },
+      "compare": {
+        "median_s": 0.0044,
+        "min_s": 0.0042,
+        "max_s": 0.0061,
+        "runs": 7
+      },
+      "resolve_draft_export": {
+        "median_s": 0.0084,
+        "min_s": 0.0077,
+        "max_s": 0.0149,
+        "runs": 7
+      },
+      "summary": {
+        "baseline_assets": 1000,
+        "proposed_assets": 1002,
+        "matched_assets": 987,
+        "unchanged_assets": 903,
+        "within_tolerance_moves": 190,
+        "affected_assets": 112,
+        "components": 119,
+        "components_by_kind": {
+          "addition": 15,
+          "deletion": 13,
+          "move": 35,
+          "attribute": 56
+        },
+        "id_overlap": 0.987
+      },
+      "accuracy": {
+        "addition": {
+          "labeled": 15,
+          "detected": 15,
+          "tp": 15,
+          "fp": 0,
+          "fn": 0,
+          "precision": 1.0,
+          "recall": 1.0
+        },
+        "deletion": {
+          "labeled": 13,
+          "detected": 13,
+          "tp": 13,
+          "fp": 0,
+          "fn": 0,
+          "precision": 1.0,
+          "recall": 1.0
+        },
+        "move": {
+          "labeled": 35,
+          "detected": 35,
+          "tp": 35,
+          "fp": 0,
+          "fn": 0,
+          "precision": 1.0,
+          "recall": 1.0
+        },
+        "attribute": {
+          "labeled": 56,
+          "detected": 56,
+          "tp": 56,
+          "fp": 0,
+          "fn": 0,
+          "precision": 1.0,
+          "recall": 1.0
+        },
+        "all": {
+          "labeled": 119,
+          "detected": 119,
+          "tp": 119,
+          "fp": 0,
+          "fn": 0,
+          "precision": 1.0,
+          "recall": 1.0
+        },
+        "negatives": {
+          "within_tolerance_motions": 190,
+          "falsely_flagged": 0,
+          "near_threshold_moves_labeled": 10,
+          "near_threshold_moves_detected": 10
+        }
+      }
+    },
+    "5000": {
+      "input_mb": 4.03,
+      "baseline_features": 5000,
+      "proposed_features": 5010,
+      "parse_both": {
+        "median_s": 0.1012,
+        "min_s": 0.0776,
+        "max_s": 0.1094,
+        "runs": 7
+      },
+      "compare": {
+        "median_s": 0.0311,
+        "min_s": 0.0293,
+        "max_s": 0.0547,
+        "runs": 7
+      },
+      "resolve_draft_export": {
+        "median_s": 0.0453,
+        "min_s": 0.0421,
+        "max_s": 0.0711,
+        "runs": 7
+      },
+      "summary": {
+        "baseline_assets": 5000,
+        "proposed_assets": 5010,
+        "matched_assets": 4935,
+        "unchanged_assets": 4563,
+        "within_tolerance_moves": 910,
+        "affected_assets": 512,
+        "components": 543,
+        "components_by_kind": {
+          "addition": 75,
+          "deletion": 65,
+          "move": 131,
+          "attribute": 272
+        },
+        "id_overlap": 0.987
+      },
+      "accuracy": {
+        "addition": {
+          "labeled": 75,
+          "detected": 75,
+          "tp": 75,
+          "fp": 0,
+          "fn": 0,
+          "precision": 1.0,
+          "recall": 1.0
+        },
+        "deletion": {
+          "labeled": 65,
+          "detected": 65,
+          "tp": 65,
+          "fp": 0,
+          "fn": 0,
+          "precision": 1.0,
+          "recall": 1.0
+        },
+        "move": {
+          "labeled": 131,
+          "detected": 131,
+          "tp": 131,
+          "fp": 0,
+          "fn": 0,
+          "precision": 1.0,
+          "recall": 1.0
+        },
+        "attribute": {
+          "labeled": 272,
+          "detected": 272,
+          "tp": 272,
+          "fp": 0,
+          "fn": 0,
+          "precision": 1.0,
+          "recall": 1.0
+        },
+        "all": {
+          "labeled": 543,
+          "detected": 543,
+          "tp": 543,
+          "fp": 0,
+          "fn": 0,
+          "precision": 1.0,
+          "recall": 1.0
+        },
+        "negatives": {
+          "within_tolerance_motions": 910,
+          "falsely_flagged": 0,
+          "near_threshold_moves_labeled": 10,
+          "near_threshold_moves_detected": 10
+        }
+      }
+    },
+    "10000": {
+      "input_mb": 8.07,
+      "baseline_features": 10000,
+      "proposed_features": 10020,
+      "parse_both": {
+        "median_s": 0.3082,
+        "min_s": 0.2336,
+        "max_s": 0.333,
+        "runs": 7
+      },
+      "compare": {
+        "median_s": 0.0776,
+        "min_s": 0.0754,
+        "max_s": 0.1587,
+        "runs": 7
+      },
+      "resolve_draft_export": {
+        "median_s": 0.1417,
+        "min_s": 0.0854,
+        "max_s": 0.1625,
+        "runs": 7
+      },
+      "summary": {
+        "baseline_assets": 10000,
+        "proposed_assets": 10020,
+        "matched_assets": 9870,
+        "unchanged_assets": 9137,
+        "within_tolerance_moves": 1810,
+        "affected_assets": 1013,
+        "components": 1074,
+        "components_by_kind": {
+          "addition": 150,
+          "deletion": 130,
+          "move": 251,
+          "attribute": 543
+        },
+        "id_overlap": 0.987
+      },
+      "accuracy": {
+        "addition": {
+          "labeled": 150,
+          "detected": 150,
+          "tp": 150,
+          "fp": 0,
+          "fn": 0,
+          "precision": 1.0,
+          "recall": 1.0
+        },
+        "deletion": {
+          "labeled": 130,
+          "detected": 130,
+          "tp": 130,
+          "fp": 0,
+          "fn": 0,
+          "precision": 1.0,
+          "recall": 1.0
+        },
+        "move": {
+          "labeled": 251,
+          "detected": 251,
+          "tp": 251,
+          "fp": 0,
+          "fn": 0,
+          "precision": 1.0,
+          "recall": 1.0
+        },
+        "attribute": {
+          "labeled": 543,
+          "detected": 543,
+          "tp": 543,
+          "fp": 0,
+          "fn": 0,
+          "precision": 1.0,
+          "recall": 1.0
+        },
+        "all": {
+          "labeled": 1074,
+          "detected": 1074,
+          "tp": 1074,
+          "fp": 0,
+          "fn": 0,
+          "precision": 1.0,
+          "recall": 1.0
+        },
+        "negatives": {
+          "within_tolerance_motions": 1810,
+          "falsely_flagged": 0,
+          "near_threshold_moves_labeled": 10,
+          "near_threshold_moves_detected": 10
+        }
+      }
+    }
+  }
+}

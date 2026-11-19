@@ -1,0 +1,142 @@
+{
+  "environment": {
+    "cpu": "Apple M1",
+    "cores": "8",
+    "memory_gb": 8.0,
+    "os": "macOS 26.5.2 (arm64)",
+    "python": "3.12.14",
+    "geodiff": "0.1.0",
+    "pyproj": "3.8.0",
+    "proj": "9.8.1",
+    "shapely": "2.2.0",
+    "numpy": "2.5.5",
+    "docker": "29.7.2, 8 CPUs, 4106604544 bytes",
+    "git_sha": "0726a10",
+    "date": "2026-11-18"
+  },
+  "seed": 20261118,
+  "results": {
+    "health_round_trip": {
+      "median_s": 0.0022,
+      "min_s": 0.0017,
+      "max_s": 0.0259,
+      "runs": 50
+    },
+    "1000": {
+      "components": 119,
+      "queue_pages": 1,
+      "upload_baseline": {
+        "median_s": 0.0463,
+        "min_s": 0.029,
+        "max_s": 0.0738,
+        "runs": 5
+      },
+      "upload_proposed": {
+        "median_s": 0.0324,
+        "min_s": 0.0291,
+        "max_s": 0.0579,
+        "runs": 5
+      },
+      "compare": {
+        "median_s": 0.0745,
+        "min_s": 0.0702,
+        "max_s": 0.4227,
+        "runs": 5
+      },
+      "queue_first_page": {
+        "median_s": 0.0121,
+        "min_s": 0.0115,
+        "max_s": 0.0139,
+        "runs": 5
+      },
+      "queue_all_pages": {
+        "median_s": 0.0122,
+        "min_s": 0.0107,
+        "max_s": 0.0274,
+        "runs": 5
+      },
+      "map_full_extent": {
+        "median_s": 0.0113,
+        "min_s": 0.0102,
+        "max_s": 0.0143,
+        "runs": 5
+      },
+      "asset_detail": {
+        "median_s": 0.0058,
+        "min_s": 0.0042,
+        "max_s": 0.0091,
+        "runs": 5
+      },
+      "single_decision": {
+        "median_s": 0.006,
+        "min_s": 0.0056,
+        "max_s": 0.0107,
+        "runs": 5
+      },
+      "draft_export": {
+        "median_s": 0.04,
+        "min_s": 0.0362,
+        "max_s": 0.0536,
+        "runs": 5
+      }
+    },
+    "5000": {
+      "components": 543,
+      "queue_pages": 3,
+      "upload_baseline": {
+        "median_s": 0.1518,
+        "min_s": 0.1249,
+        "max_s": 0.2701,
+        "runs": 5
+      },
+      "upload_proposed": {
+        "median_s": 0.1409,
+        "min_s": 0.1274,
+        "max_s": 0.1984,
+        "runs": 5
+      },
+      "compare": {
+        "median_s": 0.3765,
+        "min_s": 0.3585,
+        "max_s": 0.665,
+        "runs": 5
+      },
+      "queue_first_page": {
+        "median_s": 0.0377,
+        "min_s": 0.0373,
+        "max_s": 0.0404,
+        "runs": 5
+      },
+      "queue_all_pages": {
+        "median_s": 0.1322,
+        "min_s": 0.1292,
+        "max_s": 0.1427,
+        "runs": 5
+      },
+      "map_full_extent": {
+        "median_s": 0.0909,
+        "min_s": 0.0903,
+        "max_s": 0.0979,
+        "runs": 5
+      },
+      "asset_detail": {
+        "median_s": 0.0051,
+        "min_s": 0.0047,
+        "max_s": 0.0054,
+        "runs": 5
+      },
+      "single_decision": {
+        "median_s": 0.0235,
+        "min_s": 0.022,
+        "max_s": 0.0258,
+        "runs": 5
+      },
+      "draft_export": {
+        "median_s": 0.1822,
+        "min_s": 0.153,
+        "max_s": 0.1931,
+        "runs": 5
+      }
+    }
+  }
+}

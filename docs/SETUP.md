@@ -46,7 +46,9 @@ make check      # ruff, ruff format, mypy --strict, pytest (with PostGIS), eslin
 make e2e        # Playwright against the composed stack
 ```
 
-Tests marked `db` run only when `DATABASE_URL` is set; CI always sets it.
+Tests marked `db` run only when `DATABASE_URL` is set; CI always sets it. The independent
+GDAL/GeoPandas cross-check needs the `analysis` extra (`uv sync --all-extras`), which
+`make check-api` and CI install; plain `uv sync` skips that test.
 
 ## Endpoints
 

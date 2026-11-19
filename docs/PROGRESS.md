@@ -104,7 +104,7 @@ Limitations
 Next: Phase 4, interactive review studio.
 
 
-## Phase 4: Interactive map review studio (implemented, tested locally; not pushed)
+## Phase 4: Interactive map review studio (implemented, tested, pushed)
 
 Completed behavior
 - React review studio over a `ReviewAdapter` interface (live adapter now; the static sample
@@ -172,7 +172,7 @@ GitHub sync
 
 Next: Phase 5, public ArcGIS snapshots and the guided static sample.
 
-## Phase 5: Public ArcGIS snapshots and guided demo (implemented, tested locally; not pushed)
+## Phase 5: Public ArcGIS snapshots and guided demo (implemented, tested, pushed)
 
 Guided sample (default entry, works with no API)
 - `geodiff sample` (`make sample`) runs the Python engine on committed, seeded synthetic inputs
@@ -268,3 +268,52 @@ Next: Phase 6, validation and portfolio evidence.
 - CI run on `4445686`: **all three jobs passed**: API (ruff, format, mypy, migrations, pytest
   against PostGIS 3.5: 129 passed, 1 network test skipped), web (lint, types, vitest, build),
   and clean compose boot with the Playwright browser journey (network test skipped).
+
+## Phase 6: Validation and reproducible results
+
+Added
+- `scripts/benchmark.py` with three parts. `engine` is in-process computation at 1k/5k/10k
+  assets plus precision and recall against the generator manifest. `api` is client-observed
+  loopback HTTP + PostGIS at 1k/5k, with a fresh workspace per run, every response status
+  asserted, and a `/health` floor. `cold` is container restart to `/ready`. Raw results are in
+  `docs/benchmarks/*.json`; method and tables are in [BENCHMARKS.md](BENCHMARKS.md).
+- The Playwright live journey now also fetches the final export and the unresolved queue
+  straight from the API with the browser's own workspace token. The server state must equal
+  the golden output, which shows that live mode runs on the real backend, not on browser state.
+- `web/e2e/walkthrough.spec.ts` (runs only with `WALKTHROUGH=1`) records a captioned,
+  68-second walkthrough of the sample and a live upload. It deletes its workspace at the end.
+- README case study: problem, architecture, decisions, measured results, limitations.
+
+Measured (2026-11-18, Apple M1, Docker 29.7.2; see BENCHMARKS.md)
+- Accuracy on the labeled synthetic fixture: precision and recall 1.000 for every kind at
+  1,000 (119 labeled), 5,000 (543) and 10,000 (1,074) assets. 0 false flags among 190 / 910 /
+  1,810 within-tolerance motions; 10 of 10 near-threshold moves detected. This is a
+  consistency check against generator labels, not real-world accuracy.
+- Goldens: the hand-authored change set and reviewed output are reproduced by the engine
+  (pytest), the browser resolver (vitest), the UI download (Playwright) and the server export
+  (Playwright, direct API).
+- Engine at 5,000 assets: parse 101 ms, compare 31 ms, draft resolve 45 ms. At 10,000: 308 /
+  78 / 142 ms.
+- API at 5,000 assets (medians, 5 runs): compare 376 ms, first queue page 38 ms, whole queue
+  132 ms, full-extent map 91 ms, decision 24 ms, draft export 182 ms. Health round trip 2.2 ms.
+- Container restart to ready: 4.45 s median (3 runs).
+
+Not done
+- The QGIS check in QGIS_VERIFY.md has still not been run (QGIS is not installed).
+- No manual screen-reader pass; accessibility evidence is axe plus keyboard-only tests.
+
+Clean-install rehearsal (2026-11-18)
+- `git clone` of commit `74ea3ad` into an empty temp directory; the dev stack was stopped, and
+  the clone booted under a separate compose project with a new, empty database volume:
+  `docker compose -p geodiffclean up --build -d --wait`. Image builds took about 6 minutes;
+  migrations `0001_postgis` and `0002_review_schema` applied; `/ready` reported ready; the web
+  app returned 200.
+- From the clone: `uv sync` + pytest **127 passed, 2 skipped**. The skips are the network test
+  and the GeoPandas cross-check, because plain `uv sync` does not install the `analysis` extra.
+  CI installs it with `--all-extras`, and `make check-api` now does too (fixed in this phase).
+  `npm ci` + vitest **17 passed**. Playwright **12 passed, 2 skipped** (network import and the
+  walkthrough recorder).
+- The first Playwright run in the clone had 2 timeouts (30 s per test) while the machine load
+  average was 10 to 15 from unrelated macOS background indexing. The same two tests passed in
+  16.5 s together on rerun, and the full suite then passed in 38 s with default timeouts.
+- The rehearsal stack and its volume were removed afterwards (`down -v`).

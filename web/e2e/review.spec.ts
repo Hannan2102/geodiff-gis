@@ -113,6 +113,22 @@ test('upload, review BENCH-0142, finish every decision and download the final ex
   expect(report.mode).toBe('final');
   expect(report.counts.output_features).toBe(13);
   await expect(page.getByTestId('notice')).toContainText('Final export downloaded');
+
+  // Live mode is backed by the real API: the server-side state, fetched directly with the
+  // browser's own workspace token, holds the same decisions and the same final export.
+  const { token, cid } = await page.evaluate(() => ({
+    token: localStorage.getItem('geodiff.live.token'),
+    cid: localStorage.getItem('geodiff.live.comparison'),
+  }));
+  expect(token && cid, 'live session stored').toBeTruthy();
+  const api = process.env.E2E_API_URL ?? 'http://localhost:8000';
+  const auth = { Authorization: `Bearer ${token}` };
+  const srv = await page.request.get(`${api}/v1/comparisons/${cid}/export?mode=final&part=geojson`, { headers: auth });
+  expect(srv.status()).toBe(200);
+  expect(((await srv.json()) as { features: unknown[] }).features).toEqual(expected.features);
+  const q = await page.request.get(`${api}/v1/comparisons/${cid}/queue?disposition=unresolved`, { headers: auth });
+  expect(q.status()).toBe(200);
+  expect(((await q.json()) as { items: unknown[] }).items).toEqual([]);
   expect(errors, 'browser console errors').toEqual([]);
 });
 

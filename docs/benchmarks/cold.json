@@ -1,0 +1,25 @@
+{
+  "environment": {
+    "cpu": "Apple M1",
+    "cores": "8",
+    "memory_gb": 8.0,
+    "os": "macOS 26.5.2 (arm64)",
+    "python": "3.12.14",
+    "geodiff": "0.1.0",
+    "pyproj": "3.8.0",
+    "proj": "9.8.1",
+    "shapely": "2.2.0",
+    "numpy": "2.5.5",
+    "docker": "29.7.2, 8 CPUs, 4106604544 bytes",
+    "git_sha": "0726a10",
+    "date": "2026-11-18"
+  },
+  "results": {
+    "restart_to_ready": {
+      "median_s": 4.4467,
+      "min_s": 4.1627,
+      "max_s": 5.3301,
+      "runs": 3
+    }
+  }
+}

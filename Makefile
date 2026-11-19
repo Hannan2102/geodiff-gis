@@ -28,6 +28,7 @@ dev-web:
 check: check-api check-web   ## Lint, type-check and unit/integration tests
 
 check-api:
+	cd api && $(UV) sync --frozen --all-extras -q
 	cd api && $(UV) run ruff check . && $(UV) run ruff format --check . && $(UV) run mypy
 	cd api && DATABASE_URL=$(LOCAL_DB) $(UV) run pytest -q
 
