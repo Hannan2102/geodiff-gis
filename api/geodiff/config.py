@@ -2,7 +2,7 @@
 
 from functools import lru_cache
 
-from pydantic import Field
+from pydantic import AliasChoices, Field
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
@@ -18,7 +18,10 @@ class Settings(BaseSettings):
     db_pool_max: int = 4
     db_connect_timeout_s: int = 5
     log_level: str = "info"
-    git_sha: str = "dev"
+    # GIT_SHA locally/CI; Render injects RENDER_GIT_COMMIT for the deployed commit.
+    git_sha: str = Field(
+        default="dev", validation_alias=AliasChoices("GIT_SHA", "RENDER_GIT_COMMIT")
+    )
 
     # Public-demo bounds (see docs/API.md, "Limits").
     max_upload_bytes: int = 5 * 1024 * 1024
@@ -33,7 +36,10 @@ class Settings(BaseSettings):
     bulk_max: int = 5_000
     rate_limit_writes_per_min: int = 120
     rate_limit_workspaces_per_hour: int = 20
-    trust_forwarded_for: bool = False  # True only behind a known proxy (Render, nginx)
+    # Header that carries the real client IP, set (and overwritten) by a trusted edge proxy, e.g.
+    # "cf-connecting-ip" on Render (Cloudflare in front). Empty: use the TCP peer address.
+    # Never X-Forwarded-For: Render appends to it, so its first entry is client-controlled.
+    client_ip_header: str = ""
 
     @property
     def cors_origin_list(self) -> list[str]:

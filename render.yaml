@@ -1,0 +1,27 @@
+# Render Blueprint for the GeoDiff live API (free plan). See docs/DEPLOY.md.
+# The database is Supabase (free) and is not defined here; DATABASE_URL is entered once in the
+# Render dashboard (sync: false keeps it out of this file and out of Git).
+services:
+  - type: web
+    name: geodiff-api
+    runtime: docker
+    plan: free
+    region: ohio            # pair with Supabase us-east-2 (Ohio) for low database latency
+    branch: main
+    dockerfilePath: ./api/Dockerfile
+    dockerContext: ./api
+    autoDeploy: true
+    healthCheckPath: /ready  # database, PostGIS and migrations; a failing deploy never goes live
+    envVars:
+      - key: DATABASE_URL     # Supabase session pooler URI (port 5432, IPv4), sslmode=require
+        sync: false
+      - key: CORS_ORIGINS
+        value: https://hannan2102.github.io
+      - key: CLIENT_IP_HEADER
+        value: cf-connecting-ip
+      - key: RUN_MIGRATIONS_ON_START
+        value: "1"
+      - key: DB_POOL_MAX
+        value: "4"
+      - key: LOG_LEVEL
+        value: info

@@ -12,5 +12,7 @@ ENV PATH="/app/.venv/bin:$PATH"
 RUN useradd --system --uid 10001 geodiff
 USER geodiff
 EXPOSE 8000
-# Migrations run as a separate release step (see compose.yaml / docs/DEPLOY.md).
-CMD ["sh", "-c", "uvicorn geodiff.main:app --host 0.0.0.0 --port ${PORT:-8000} --proxy-headers --forwarded-allow-ips='*'"]
+# Migrations: compose runs them as a separate one-shot service. Hosts without a release step
+# (Render free) set RUN_MIGRATIONS_ON_START=1; concurrent starts serialize on an advisory lock.
+# No --proxy-headers: X-Forwarded-For is client-controlled on Render (see CLIENT_IP_HEADER).
+CMD ["sh", "-c", "if [ \"$RUN_MIGRATIONS_ON_START\" = 1 ]; then python -m geodiff.migrate || exit 1; fi; exec uvicorn geodiff.main:app --host 0.0.0.0 --port ${PORT:-8000} --no-server-header --no-access-log"]

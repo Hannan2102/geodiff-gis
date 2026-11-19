@@ -1,0 +1,61 @@
+name: Pages
+
+# Builds the static web app and publishes it to GitHub Pages at /geodiff-gis/.
+# The live API URL is a public, non-secret repository variable (Settings > Secrets and
+# variables > Actions > Variables > GEODIFF_API_URL). The guided sample needs no API.
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: false
+
+jobs:
+  build:
+    # Skips (instead of failing) until the API URL variable is configured; see docs/DEPLOY.md.
+    if: vars.GEODIFF_API_URL != ''
+    runs-on: ubuntu-24.04
+    defaults:
+      run:
+        working-directory: web
+    env:
+      VITE_BASE: /geodiff-gis/
+      VITE_API_URL: ${{ vars.GEODIFF_API_URL }}
+    steps:
+      - uses: actions/checkout@v7
+      - name: Require an HTTPS API URL
+        run: |
+          case "$VITE_API_URL" in
+            https://*) echo "API: $VITE_API_URL" ;;
+            *) echo "::error::Set the repository variable GEODIFF_API_URL to the https:// API origin"; exit 1 ;;
+          esac
+      - uses: actions/setup-node@v7
+        with:
+          node-version: "22.13"
+          cache: npm
+          cache-dependency-path: web/package-lock.json
+      - run: npm ci
+      - run: npm run build
+      - name: Record the deployed commit
+        run: echo "${GITHUB_SHA}" > dist/version.txt
+      - uses: actions/configure-pages@v6
+      - uses: actions/upload-pages-artifact@v5
+        with:
+          path: web/dist
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-24.04
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - id: deployment
+        uses: actions/deploy-pages@v5

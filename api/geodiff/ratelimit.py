@@ -45,10 +45,12 @@ class RateLimiter:
 
 
 def client_key(request: Request) -> str:
-    if get_settings().trust_forwarded_for:
-        fwd = request.headers.get("x-forwarded-for")
-        if fwd:
-            return fwd.split(",")[0].strip()
+    """Rate-limit key: the client IP from the configured trusted header, else the TCP peer."""
+    header = get_settings().client_ip_header.strip().lower()
+    if header and header != "x-forwarded-for":
+        value = request.headers.get(header, "").strip()
+        if value:
+            return value[:64]
     return request.client.host if request.client else "unknown"
 
 

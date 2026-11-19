@@ -117,4 +117,5 @@ browser (React, MapLibre)
 - [docs/API.md](docs/API.md): live workspace API, isolation, limits
 - [docs/SOURCES.md](docs/SOURCES.md): the public ArcGIS source and why others were rejected
 - [docs/BENCHMARKS.md](docs/BENCHMARKS.md): method, environment and results
+- [docs/DEPLOY.md](docs/DEPLOY.md): free-tier hosting, setup, rollback and backups
 - [docs/PROGRESS.md](docs/PROGRESS.md): phase-by-phase build log with verification

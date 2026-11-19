@@ -317,3 +317,34 @@ Clean-install rehearsal (2026-11-18)
   average was 10 to 15 from unrelated macOS background indexing. The same two tests passed in
   16.5 s together on rerun, and the full suite then passed in 38 s with default timeouts.
 - The rehearsal stack and its volume were removed afterwards (`down -v`).
+
+## Phase 7: Deployment (preparation; not deployed yet)
+
+Prepared and tested locally
+- `render.yaml` (Render Blueprint, Free, Ohio): Docker API, `/ready` health check,
+  `DATABASE_URL` as a dashboard-only secret, `CORS_ORIGINS=https://hannan2102.github.io`.
+- The API container runs migrations on start when `RUN_MIGRATIONS_ON_START=1` (Render Free has
+  no pre-deploy step), still under the advisory lock. Verified by running the image against
+  the compose database: migrations ran, `/ready` returned ready, and `git_sha` came from
+  `RENDER_GIT_COMMIT`. No `Server` header, and no uvicorn access log (it printed client IPs).
+- Migration `0003_lock_down_public_schema`: RLS on every GeoDiff table, and grants to the
+  Supabase roles `anon`/`authenticated` revoked. Tests simulate a Supabase-style `anon` role:
+  after the lockdown it has no privileges, and even with a grant re-added it reads 0 rows. A
+  second test fails if any future table lacks RLS.
+- Rate-limit client IP: `X-Forwarded-For` was trusted (first entry), which a client can
+  spoof on Render. Replaced with `CLIENT_IP_HEADER` (Render: `cf-connecting-ip`), falling back
+  to the TCP peer, and uvicorn no longer rewrites the client address from proxy headers.
+  Covered by tests.
+- `.github/workflows/pages.yml`: builds with `VITE_BASE=/geodiff-gis/` and the
+  `GEODIFF_API_URL` repository variable (HTTPS required), writes `version.txt`, deploys with
+  `actions/deploy-pages@v5`. It skips until the variable is set.
+- The base-path build, served statically under `/geodiff-gis/`, opens the sample on BENCH-0142,
+  a direct link survives reload, fonts load, and no requests fail.
+- [DEPLOY.md](DEPLOY.md): providers, regions, quotas, sleep and pause behaviour, security
+  settings, exact dashboard steps, verification, rollback, and backup/restore commands.
+
+Checks: pytest 135 passed, 1 skipped (network); Playwright 12 passed, 2 skipped (network,
+walkthrough recorder) on the rebuilt stack; eslint and tsc clean.
+
+Waiting on: Supabase project and Render Blueprint setup in the owner's accounts (DEPLOY.md
+steps 1 and 2).
