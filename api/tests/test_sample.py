@@ -3,13 +3,36 @@
 from __future__ import annotations
 
 import json
+import math
 from pathlib import Path
+from typing import Any
 
 from geodiff import sample
 
 ROOT = Path(__file__).resolve().parents[2]
 DEMO = ROOT / "fixtures" / "demo"
 GOLDEN = ROOT / "fixtures" / "golden"
+
+
+def _same(a: Any, b: Any, path: str = "$") -> None:
+    """Exact structure, IDs and strings; floats to 1e-9 relative.
+
+    Geodesic results differ in the last ulp between platforms (e.g. macOS arm64 vs Linux
+    x86_64 libm); bundle hashes inherit that, so they are not compared.
+    """
+    if isinstance(a, dict):
+        assert isinstance(b, dict) and a.keys() == b.keys(), f"{path}: keys differ"
+        for k in a:
+            if k != "bundle_sha256":
+                _same(a[k], b[k], f"{path}.{k}")
+    elif isinstance(a, list):
+        assert isinstance(b, list) and len(a) == len(b), f"{path}: lengths differ"
+        for i, (x, y) in enumerate(zip(a, b, strict=True)):
+            _same(x, y, f"{path}[{i}]")
+    elif isinstance(a, float) or isinstance(b, float):
+        assert math.isclose(a, b, rel_tol=1e-9, abs_tol=1e-9), f"{path}: {a} != {b}"
+    else:
+        assert type(a) is type(b) and a == b, f"{path}: {a!r} != {b!r}"
 
 
 def test_committed_bundle_is_current(tmp_path: Path) -> None:
@@ -23,9 +46,9 @@ def test_committed_bundle_is_current(tmp_path: Path) -> None:
         ("parity", "parity/sample_parity.json"),
         ("golden", "parity/golden_bundle.json"),
     ):
-        assert paths[name].read_bytes() == (DEMO / rel).read_bytes(), (
-            f"{rel} is stale: run `make sample` and commit the result"
-        )
+        fresh = json.loads(paths[name].read_text())
+        committed = json.loads((DEMO / rel).read_text())
+        _same(fresh, committed, rel)  # stale? run `make sample` and commit the result
 
 
 def test_bundle_story_and_presets() -> None:
