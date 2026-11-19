@@ -36,7 +36,7 @@ jobs:
       DATABASE_URL: postgresql://geodiff:ci-only-password@localhost:5432/geodiff
     steps:
       - uses: actions/checkout@v7
-      - uses: astral-sh/setup-uv@v10
+      - uses: astral-sh/setup-uv@v10.3.3  # no moving major tags since v8
         with:
           version: "0.12.7"
           enable-cache: true
