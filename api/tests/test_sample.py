@@ -15,7 +15,7 @@ GOLDEN = ROOT / "fixtures" / "golden"
 
 
 def _same(a: Any, b: Any, path: str = "$") -> None:
-    """Exact structure, IDs and strings; floats to 1e-9 relative.
+    """Exact structure, IDs and strings; floats near-exact (geodesic fields to 1e-6).
 
     Geodesic results differ in the last ulp between platforms (e.g. macOS arm64 vs Linux
     x86_64 libm); bundle hashes inherit that, so they are not compared.
@@ -30,7 +30,12 @@ def _same(a: Any, b: Any, path: str = "$") -> None:
         for i, (x, y) in enumerate(zip(a, b, strict=True)):
             _same(x, y, f"{path}[{i}]")
     elif isinstance(a, float) or isinstance(b, float):
-        assert math.isclose(a, b, rel_tol=1e-9, abs_tol=1e-9), f"{path}: {a} != {b}"
+        # Computed geodesics may differ by nanometres between platforms (FMA, libm);
+        # 1 micrometre / 1 micro-degree is far below any classification margin (>= 1 cm).
+        # Everything else (coordinates are copied from inputs) must match to 1e-12.
+        geodesic = path.endswith((".distance_m", ".bearing_deg"))
+        tol = 1e-6 if geodesic else 1e-12
+        assert math.isclose(a, b, rel_tol=1e-12, abs_tol=tol), f"{path}: {a} != {b}"
     else:
         assert type(a) is type(b) and a == b, f"{path}: {a!r} != {b!r}"
 
