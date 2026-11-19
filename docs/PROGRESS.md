@@ -247,3 +247,24 @@ GitHub sync
 - Still blocked on the `workflow` token scope.
 
 Next: Phase 6, validation and portfolio evidence.
+
+## GitHub sync (2026-11-18)
+
+- The `workflow` scope was granted. Phase commits were pushed to
+  https://github.com/Hannan2102/geodiff-gis in order, one push each, and the remote `main` was
+  verified after every push: `4dd7231` (Phase 1), `37f3dc1` (2), `c115faf` (3), `b44fd1b` (4),
+  `af34489` (5).
+- Before the first push, the full history was scanned for credentials, key or `.env` files,
+  remote database URLs and blobs over 1 MB. None were found.
+- CI for the earlier phase pushes was cancelled by the workflow's concurrency rule, so only the
+  latest push ran. Fixes found by CI:
+  - `d683297`: `astral-sh/setup-uv@v10` does not exist (no moving major tags since v8). Pinned
+    to `v10.3.3`.
+  - `b457866`, `4445686`: the sample-bundle staleness test compared bytes. Linux x86_64 and
+    macOS arm64 geodesics differ in the last digits (bearing ~1e-14 relative; one 1.15 m
+    distance by 2 nm). The test now compares structure, IDs and strings exactly; coordinates
+    and other floats to 1e-12; and only `distance_m`/`bearing_deg` to 1e-6 (micrometres, far
+    below the 1 cm classification margins).
+- CI run on `4445686`: **all three jobs passed**: API (ruff, format, mypy, migrations, pytest
+  against PostGIS 3.5: 129 passed, 1 network test skipped), web (lint, types, vitest, build),
+  and clean compose boot with the Playwright browser journey (network test skipped).
