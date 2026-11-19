@@ -219,6 +219,26 @@ def list_datasets(ws: Auth) -> dict[str, Any]:
         return {"datasets": store.list_datasets(conn, ws.id)}
 
 
+@router.get("/datasets/suggest-fields", tags=["datasets"])
+def suggest_fields(
+    ws: Auth,
+    baseline: uuid.UUID,
+    proposed: uuid.UUID,
+    baseline_id_field: str,
+    proposed_id_field: str | None = None,
+) -> dict[str, Any]:
+    """Fields the engine suggests comparing (scalar, in both versions, not IDs or importer
+    timestamps), with a reason for every field that is not suggested."""
+    with get_pool().connection() as conn:
+        return store.suggest_fields(
+            conn,
+            ws.id,
+            baseline,
+            proposed,
+            {baseline_id_field, proposed_id_field or baseline_id_field},
+        )
+
+
 @router.get("/datasets/{dataset_id}", tags=["datasets"])
 def get_dataset(ws: Auth, dataset_id: uuid.UUID) -> dict[str, Any]:
     """Summary: feature count, fields and coverage, candidate ID fields, sampled validation issues."""

@@ -16,7 +16,12 @@ from psycopg.rows import DictRow
 from psycopg.types.json import Jsonb
 
 from geodiff.config import get_settings
-from geodiff.engine.compare import CompareOptions, ComparisonError, compare_datasets
+from geodiff.engine.compare import (
+    CompareOptions,
+    ComparisonError,
+    compare_datasets,
+    suggested_compare_fields,
+)
 from geodiff.engine.geojson import ParsedDataset, parse_geojson
 from geodiff.engine.ids import index_ids
 from geodiff.engine.resolve import DISPOSITIONS, FinalExportBlocked, resolve
@@ -209,6 +214,45 @@ def get_original(conn: Conn, wid: uuid.UUID, dataset_id: uuid.UUID) -> tuple[str
     if row is None:
         raise not_found("Dataset")
     return row["name"], bytes(row["original"])
+
+
+def suggest_fields(
+    conn: Conn,
+    wid: uuid.UUID,
+    baseline_id: uuid.UUID,
+    proposed_id: uuid.UUID,
+    id_fields: set[str],
+) -> dict[str, Any]:
+    """Engine-suggested comparable fields, plus every field with its comparability."""
+    _, base = _load_parsed(conn, wid, baseline_id)
+    _, prop = _load_parsed(conn, wid, proposed_id)
+    suggested = suggested_compare_fields(base, prop, id_fields)
+    fields = []
+    for name in sorted(set(base.fields) | set(prop.fields)):
+        b, p = base.fields.get(name), prop.fields.get(name)
+        bd = b.to_dict(base.input_count) if b else None
+        pd = p.to_dict(prop.input_count) if p else None
+        scalar = (bd is None or bd["scalar"]) and (pd is None or pd["scalar"])
+        reason = None
+        if name in id_fields:
+            reason = "ID field"
+        elif not scalar:
+            reason = "nested values (preserved, not compared)"
+        elif bd is None or pd is None:
+            reason = "only in one version"
+        elif name not in suggested:
+            reason = "importer/editor bookkeeping"
+        fields.append(
+            {
+                "name": name,
+                "baseline_coverage": bd["coverage"] if bd else 0.0,
+                "proposed_coverage": pd["coverage"] if pd else 0.0,
+                "comparable": scalar and name not in id_fields,
+                "suggested": name in suggested,
+                "note": reason,
+            }
+        )
+    return {"suggested": suggested, "fields": fields}
 
 
 def _load_parsed(
@@ -459,7 +503,30 @@ def _comparison_out(conn: Conn, row: DictRow) -> dict[str, Any]:
         "summary": row["summary"],
         "warnings": row["warnings"],
         "progress": _progress(conn, row["id"]),
+        "extent": _extent(conn, row),
     }
+
+
+def _extent(conn: Conn, row: DictRow) -> list[float] | None:
+    """[minLon, minLat, maxLon, maxLat] of changes, or of the baseline when nothing changed."""
+    e = conn.execute(
+        """
+        SELECT ST_XMin(x) AS x0, ST_YMin(x) AS y0, ST_XMax(x) AS x1, ST_YMax(x) AS y1 FROM (
+          SELECT ST_Extent(g) AS x FROM (
+            SELECT geom_from AS g FROM change_components WHERE comparison_id = %s
+            UNION ALL SELECT geom_to FROM change_components WHERE comparison_id = %s) s) t
+        """,
+        (row["id"], row["id"]),
+    ).fetchone()
+    if e is None or e["x0"] is None:
+        e = conn.execute(
+            "SELECT ST_XMin(x) AS x0, ST_YMin(x) AS y0, ST_XMax(x) AS x1, ST_YMax(x) AS y1 "
+            "FROM (SELECT ST_Extent(geom) AS x FROM features WHERE snapshot_id = %s) t",
+            (row["baseline_snapshot_id"],),
+        ).fetchone()
+    if e is None or e["x0"] is None:
+        return None
+    return [e["x0"], e["y0"], e["x1"], e["y1"]]
 
 
 def get_comparison(conn: Conn, wid: uuid.UUID, cid: uuid.UUID) -> dict[str, Any]:

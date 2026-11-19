@@ -102,3 +102,72 @@ Limitations
   workspace is created, not on a schedule.
 
 Next: Phase 4, interactive review studio.
+
+
+## Phase 4: Interactive map review studio (implemented, tested locally; not pushed)
+
+Completed behavior
+- React review studio over a `ReviewAdapter` interface (live adapter now; the static sample
+  adapter is Phase 5). Proof-sheet styling: paper/ink palette, registration marks, a distinct
+  shape per change kind (teal plus, rust crossed ring, cobalt arrow, plum split square) so
+  meaning never depends on color alone.
+- MapLibre 6 with a fully local style (bundled synthetic context layers; no third-party tiles,
+  glyphs or sprites), viewport-loaded change symbols, approved-position rings at zoom 14+,
+  selected-move line with arrow and a geodesic distance/compass label, a chooser for
+  overlapping symbols, reduced-motion aware camera moves. The map chunk is lazy-loaded.
+- Windowed queue (filters by kind and status, ID search, arrow/j/k/Home/End keys), evidence
+  panel with per-component cards (move diagram, typed old/new values), accept/reject/flag
+  (a note is required to flag), undo, audit trail, all properties.
+- Keyboard: a accept, r reject, [ ] change component, u undo; Escape closes drawers and menus.
+- Layouts: 3 panes at 1200 px and wider, queue + map + details drawer from 768 px, tabs with a
+  sticky quick-decision bar below 768 px.
+- Upload dialog: API wake-up status, per-file validation summary, ID-field choice, field
+  suggestions (nested/mixed fields disabled with a reason), tolerance input, confirmation
+  before replacing a partially reviewed run.
+- Draft and final export (final is locked until every component is accepted or rejected),
+  each with its report file.
+- No-WebGL fallback table; API outage notices that keep the workspace and current decisions.
+
+Defects found and fixed during browser testing
+- MapLibre's stylesheet (loaded later) overrode the map container to `position: relative`,
+  collapsing the map to 0 px. A selector with higher specificity plus explicit size fixes it;
+  a regression assertion checks the map is taller than 400 px.
+- nginx served the `.mjs` map worker as `application/octet-stream`, which browsers refuse
+  for module workers. It is now served as `text/javascript`.
+- Choosing both files at once created two workspaces. Workspace creation is now shared; a
+  regression test checks exactly one `POST /v1/workspaces`.
+- The export menu ignored Escape. It is now a disclosure that closes on Escape or an outside
+  click and returns focus to its button.
+- Decorative kind symbols exposed unnamed `img` roles (axe `svg-img-alt`); they are now
+  `aria-hidden`.
+
+Commands and results (2026-11-18)
+- `npx tsc -b`, `npx eslint .`: clean. `npx vitest run`: 2 passed. `npm run build`: main chunk
+  268 kB (84 kB gzip); map chunk 1.09 MB (300 kB gzip), lazy-loaded.
+- `make check-api`: **108 passed**.
+- `docker compose up --build -d --wait` followed by `npx playwright test` (Chromium):
+  **8 passed**:
+  1. Upload the golden pair, review BENCH-0142 (accept condition, reject 119.6 m move), undo,
+     finish all 9 decisions, and download the final export. The downloaded GeoJSON equals
+     `expected_reviewed.geojson`. Report `mode: final`. axe clean. No console errors.
+  2. Keyboard-only review of BENCH-0142.
+  3, 4. 768 and 390 px: no horizontal overflow, decisions reachable, axe clean (WCAG 2.1 A/AA
+     rules).
+  5. No-WebGL fallback table.
+  6. API outage notice, recovery, and decisions restored after a reload.
+  7. Both files chosen at once share one workspace.
+  8. Invalid and ambiguous uploads explained; compare stays disabled.
+- Screenshots: `docs/screenshots/studio-{1440,768,390,390-map}.png` (taken by the e2e run with
+  `SCREENSHOT_DIR`).
+
+Notes
+- The local compose stack sets `RATE_LIMIT_WORKSPACES_PER_HOUR=1000` so e2e runs do not hit
+  the 20/hour production default, which stays unchanged in `config.py`.
+- The UI suggests `last_inspected` as a compared field; the golden scenario deliberately
+  leaves it unselected, so the e2e test selects the golden field set explicitly.
+- axe checks cover automated rules only; no manual screen-reader pass has been run.
+
+GitHub sync
+- Still blocked on the `workflow` token scope (current scopes: gist, read:org, repo).
+
+Next: Phase 5, public ArcGIS snapshots and the guided static sample.

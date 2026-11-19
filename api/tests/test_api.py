@@ -513,3 +513,22 @@ def test_errors_never_leak_internals(client):
     assert r.status_code == 422
     body = r.json()["error"]
     assert body["code"] == "invalid_request" and "Traceback" not in r.text
+
+
+def test_suggest_fields_and_extent(client):
+    h, _ = new_ws(client)
+    run = golden_run(client, h)
+    b = run["inputs"]["baseline"]["dataset_id"]
+    p = run["inputs"]["proposed"]["dataset_id"]
+    r = client.get(
+        "/v1/datasets/suggest-fields",
+        headers=h,
+        params={"baseline": b, "proposed": p, "baseline_id_field": "asset_id"},
+    ).json()
+    assert {"condition", "material", "notes", "install_year"} <= set(r["suggested"])
+    notes = {f["name"]: f["note"] for f in r["fields"]}
+    assert notes["imported_at"] == "importer/editor bookkeeping"
+    assert notes["maintenance"].startswith("nested")
+    assert notes["asset_id"] == "ID field"
+    x0, y0, x1, y1 = run["extent"]
+    assert x0 <= -96.7969 <= x1 and y0 <= 32.785412 <= y1

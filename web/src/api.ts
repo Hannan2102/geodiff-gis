@@ -1,4 +1,6 @@
-export const API_URL: string = (import.meta.env.VITE_API_URL as string | undefined) ?? 'http://localhost:8000';
+import { API_URL } from './adapters/live';
+
+export { API_URL };
 
 export interface Readiness {
   status: string;
@@ -25,7 +27,7 @@ export async function fetchReadiness(signal?: AbortSignal, timeoutMs = 8000): Pr
     const name = err instanceof DOMException ? err.name : 'NetworkError';
     return {
       kind: 'unreachable',
-      error: name === 'TimeoutError' ? 'The API did not answer within 8 seconds.' : 'The API could not be reached.',
+      error: name === 'TimeoutError' ? `The API did not answer within ${Math.round(timeoutMs / 1000)} seconds.` : 'The API could not be reached.',
     };
   }
 }
