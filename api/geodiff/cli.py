@@ -108,6 +108,18 @@ def cmd_generate(args: argparse.Namespace) -> int:
     return 0
 
 
+def cmd_sample(args: argparse.Namespace) -> int:
+    from geodiff import sample
+
+    demo, golden = Path(args.demo), Path(args.golden)
+    if args.regenerate_inputs or not (demo / "inputs").exists():
+        sample.write_inputs(demo)
+    paths = sample.build_all(demo, golden)
+    for name, path in paths.items():
+        print(f"wrote {name}: {path} ({path.stat().st_size:,} bytes)", file=sys.stderr)
+    return 0
+
+
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(prog="geodiff", description="Point-inventory change review.")
     parser.add_argument("--version", action="version", version=f"geodiff {__version__}")
@@ -136,6 +148,14 @@ def main(argv: list[str] | None = None) -> int:
     r.add_argument("--report")
     r.add_argument("--final", action="store_true")
     r.set_defaults(func=cmd_resolve)
+
+    s = sub.add_parser("sample", help="build the static guided-sample bundle and parity fixtures")
+    s.add_argument("--demo", default="../fixtures/demo")
+    s.add_argument("--golden", default="../fixtures/golden")
+    s.add_argument(
+        "--regenerate-inputs", action="store_true", help="rewrite the committed sample inputs"
+    )
+    s.set_defaults(func=cmd_sample)
 
     g = sub.add_parser("generate", help="write deterministic synthetic fixtures")
     g.add_argument("--out", default="../fixtures")

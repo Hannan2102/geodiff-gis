@@ -116,7 +116,15 @@ export default function Queue({ onOpen }: { onOpen?: () => void }) {
         onKeyDown={onKeyDown}
         onScroll={(e) => setScrollTop(e.currentTarget.scrollTop)}
       >
-        {!queueLoading && items.length === 0 && <p className="empty">No changes match these filters.</p>}
+        {!queueLoading && items.length === 0 && (
+          <p className="empty">
+            {info && info.summary.components === 0
+              ? info.inputs.baseline.sha256 === info.inputs.proposed.sha256
+                ? 'No changes: both inputs are byte-identical (same SHA-256). For a public layer, take the second snapshot later, after the source has been edited.'
+                : 'No changes beyond the move tolerance or in the compared fields.'
+              : 'No changes match these filters.'}
+          </p>
+        )}
         <div style={{ height: items.length * ROW, position: 'relative' }}>
           {visible.map((it, i) => {
             const idx = start + i;

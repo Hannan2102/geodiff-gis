@@ -104,7 +104,29 @@ export function Progress() {
   );
 }
 
-export default function Toolbar({ onUpload, onImport, onTour, onSample, onReset }: { onUpload: () => void; onImport?: () => void; onTour: () => void; onSample?: () => void; onReset?: () => void }) {
+export interface PresetControl {
+  values: number[];
+  current: number;
+  onChange: (t: number) => void;
+}
+
+export default function Toolbar({
+  onUpload,
+  onImport,
+  onTour,
+  onSample,
+  onReset,
+  onLive,
+  presets,
+}: {
+  onUpload: () => void;
+  onImport?: () => void;
+  onTour: () => void;
+  onSample?: () => void;
+  onReset?: () => void;
+  onLive?: () => void;
+  presets?: PresetControl;
+}) {
   const { adapter, info } = useReview();
   return (
     <header className="toolbar">
@@ -117,15 +139,33 @@ export default function Toolbar({ onUpload, onImport, onTour, onSample, onReset 
         <p className="datasets" title={`${info.inputs.baseline.name} → ${info.inputs.proposed.name}`}>
           <span className="mono">{info.inputs.baseline.name}</span> <span aria-hidden="true">→</span> <span className="sr-only">compared with</span>{' '}
           <span className="mono">{info.inputs.proposed.name}</span>
-          <span className="hint"> · ±{info.parameters.tolerance_m} m</span>
+          {!presets && <span className="hint"> · ±{info.parameters.tolerance_m} m</span>}
+          {adapter.mode === 'sample' && <span className="hint"> · synthetic data, decisions saved in this browser</span>}
         </p>
+      )}
+      {presets && (
+        <label className="preset">
+          <span>Move tolerance</span>
+          <select value={presets.current} onChange={(e) => presets.onChange(Number(e.target.value))} data-testid="preset">
+            {presets.values.map((v) => (
+              <option key={v} value={v}>
+                {v} m preset
+              </option>
+            ))}
+          </select>
+        </label>
       )}
       <Progress />
       <nav className="actions" aria-label="Main actions">
         <button type="button" className="btn" onClick={onUpload} data-testid="try-files">Try your own files</button>
         {onImport && <button type="button" className="btn" onClick={onImport} data-testid="import-layer">Import public layer</button>}
+        {onLive && <button type="button" className="btn" onClick={onLive} data-testid="open-live">Live workspace</button>}
         {onSample && <button type="button" className="btn" onClick={onSample} data-testid="open-sample">Open sample</button>}
-        {onReset && <button type="button" className="btn ghost" onClick={onReset} data-testid="reset">Reset</button>}
+        {onReset && (
+          <button type="button" className="btn ghost" onClick={onReset} data-testid="reset">
+            {adapter.mode === 'sample' ? 'Reset sample' : 'Delete workspace'}
+          </button>
+        )}
         <ExportMenu />
         <button type="button" className="btn ghost" onClick={onTour}>Tour</button>
         <a className="btn ghost" href={REPO_URL} target="_blank" rel="noreferrer">Code ↗</a>

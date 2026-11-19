@@ -155,7 +155,7 @@ function Properties({ a }: { a: AssetDetail }) {
 }
 
 export default function Evidence({ onClose }: { onClose?: () => void }) {
-  const { detail, detailLoading, selectedId, undo, busy, info, setDisposition } = useReview();
+  const { adapter, detail, detailLoading, selectedId, undo, busy, info, setDisposition } = useReview();
   const [picked, setPicked] = useState<{ asset: string; index: number } | null>(null);
   const heading = useRef<HTMLHeadingElement>(null);
   const comps = detail?.components;
@@ -218,6 +218,13 @@ export default function Evidence({ onClose }: { onClose?: () => void }) {
         )}
       </header>
       <p className="explain">{explain(detail)}</p>
+      {adapter.mode === 'sample' && adapter.focusAsset === detail.asset_id && (
+        <p className="guide" data-testid="guide">
+          <strong>Guided step.</strong> The approved position is inside Pecan Hollow Park; the field report puts the bench across 11th St, outside
+          the park. A reasonable review accepts the condition update and rejects the move, so the export keeps the approved location with the
+          new condition. (Synthetic data.)
+        </p>
+      )}
       <ol className="comps">
         {detail.components.map((c, i) => (
           <ComponentCard key={`${c.component_id}:${c.decision.version}`} c={c} active={i === active} onFocus={() => setActive(i)} />

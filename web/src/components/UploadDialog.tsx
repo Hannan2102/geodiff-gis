@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import { ApiError, liveSession, workspaceApi } from '../adapters/live';
-import type { ComparisonInfo, DatasetSummary, FieldSuggestion } from '../types';
+import type { ComparisonInfo, DatasetSummary, FieldSuggestion, PublicSource } from '../types';
 import ApiStatus from './ApiStatus';
 import Dialog from './Dialog';
 
@@ -10,15 +10,64 @@ const base = import.meta.env.BASE_URL;
 
 interface Slot {
   file?: File;
+  label?: string;
   status: 'idle' | 'uploading' | 'done' | 'error';
   data?: DatasetSummary;
   error?: ApiError;
   idField?: string;
 }
 
-function DatasetCard({ role, slot, onFile, onIdField }: { role: Role; slot: Slot; onFile: (f: File) => void; onIdField: (f: string) => void }) {
+function SourcePicker({ role, sources, onImport, busy }: { role: Role; sources: PublicSource[] | 'loading' | 'unavailable'; onImport: (s: PublicSource) => void; busy: boolean }) {
+  const [pick, setPick] = useState('');
+  if (sources === 'loading') return <p className="hint">Loading the curated public layers…</p>;
+  if (sources === 'unavailable') return <p className="hint">Public layers are listed by the live API, which is unavailable right now.</p>;
+  if (!sources.length) return <p className="hint">No public layers are configured on this server.</p>;
+  const chosen = sources.find((s) => s.id === pick) ?? sources[0]!;
+  return (
+    <div className="source-pick">
+      <label>
+        Public layer{' '}
+        <select value={chosen.id} onChange={(e) => setPick(e.target.value)} data-testid={`source-${role}`}>
+          {sources.map((s) => (
+            <option key={s.id} value={s.id}>
+              {s.title}
+            </option>
+          ))}
+        </select>
+      </label>
+      <p className="hint">
+        {chosen.owner}. {chosen.reuse} Verified {chosen.verified_on}.{' '}
+        <a href={chosen.item_url} target="_blank" rel="noreferrer">
+          Source item ↗
+        </a>
+      </p>
+      <button type="button" className="btn" disabled={busy} onClick={() => onImport(chosen)} data-testid={`import-${role}`}>
+        Take a snapshot now
+      </button>
+    </div>
+  );
+}
+
+function DatasetCard({
+  role,
+  slot,
+  onFile,
+  onIdField,
+  sources,
+  onImport,
+  publicFirst,
+}: {
+  role: Role;
+  slot: Slot;
+  onFile: (f: File) => void;
+  onIdField: (f: string) => void;
+  sources: PublicSource[] | 'loading' | 'unavailable';
+  onImport: (s: PublicSource) => void;
+  publicFirst: boolean;
+}) {
   const d = slot.data;
   const v = d?.summary.validation;
+  const src = d?.source;
   const [drag, setDrag] = useState(false);
   return (
     <section className="ds-card" aria-label={ROLE_LABEL[role]}>
@@ -40,7 +89,11 @@ function DatasetCard({ role, slot, onFile, onIdField }: { role: Role; slot: Slot
         <input type="file" accept=".geojson,.json,application/geo+json,application/json" onChange={(e) => e.target.files?.[0] && onFile(e.target.files[0])} data-testid={`file-${role}`} />
         <span>{slot.file ? slot.file.name : 'Choose or drop a GeoJSON file'}</span>
       </label>
-      {slot.status === 'uploading' && <p role="status">Uploading and validating {slot.file?.name}…</p>}
+      <details className="public-layer" open={publicFirst}>
+        <summary>Or snapshot a public ArcGIS layer</summary>
+        <SourcePicker role={role} sources={sources} onImport={onImport} busy={slot.status === 'uploading'} />
+      </details>
+      {slot.status === 'uploading' && <p role="status">Reading and validating {slot.label}…</p>}
       {slot.status === 'error' && slot.error && (
         <p className="field-error" role="alert">
           {slot.error.message} {slot.error.guidance}
@@ -53,6 +106,12 @@ function DatasetCard({ role, slot, onFile, onIdField }: { role: Role; slot: Slot
             {d.duplicate ? ' · already uploaded (reused)' : ''}
           </p>
           <p className="mono hint">sha256 {d.sha256.slice(0, 16)}…</p>
+          {src && (
+            <p className="hint" data-testid={`provenance-${role}`}>
+              Snapshot of <a href={src.item_url} target="_blank" rel="noreferrer">{src.title}</a> taken {new Date(src.retrieved_at).toLocaleString()} ·
+              {src.service_last_edit ? ` source last edited ${new Date(src.service_last_edit).toLocaleString()} ·` : ''} © {src.attribution}. {src.id_note}
+            </p>
+          )}
           {d.valid ? (
             <>
               <label>
@@ -104,10 +163,12 @@ export default function UploadDialog({
   onClose,
   onCompared,
   current,
+  startWithPublic = false,
 }: {
   onClose: () => void;
   onCompared: (token: string, info: ComparisonInfo) => void;
   current: ComparisonInfo | null;
+  startWithPublic?: boolean;
 }) {
   const [slots, setSlots] = useState<Record<Role, Slot>>({ baseline: { status: 'idle' }, proposed: { status: 'idle' } });
   const [fields, setFields] = useState<FieldSuggestion | null>(null);
@@ -133,27 +194,43 @@ export default function UploadDialog({
     return creating.current;
   }
 
-  async function onFile(role: Role, file: File) {
-    setSlots((s) => ({ ...s, [role]: { file, status: 'uploading' } }));
+  async function load(role: Role, label: string, file: File | undefined, run: (token: string) => Promise<DatasetSummary>) {
+    setSlots((s) => ({ ...s, [role]: { file, label, status: 'uploading' } }));
     setFields(null);
     try {
       let t = await token();
       let data: DatasetSummary;
       try {
-        data = await workspaceApi.upload(t, file, file.name);
+        data = await run(t);
       } catch (e) {
         if (!(e instanceof ApiError) || e.code !== 'workspace_expired') throw e;
         liveSession.save(null, null);
         t = await token();
-        data = await workspaceApi.upload(t, file, file.name);
+        data = await run(t);
       }
       const ids = data.summary.candidate_id_fields;
-      const idField = ids.includes('asset_id') ? 'asset_id' : ids[0];
-      setSlots((s) => ({ ...s, [role]: { file, status: 'done', data, idField } }));
+      const preferred = data.source?.id_field;
+      const idField = preferred && ids.includes(preferred) ? preferred : ids.includes('asset_id') ? 'asset_id' : ids[0];
+      setSlots((s) => ({ ...s, [role]: { file, label, status: 'done', data, idField } }));
     } catch (e) {
-      setSlots((s) => ({ ...s, [role]: { file, status: 'error', error: e instanceof ApiError ? e : new ApiError(0, 'error', String(e)) } }));
+      setSlots((s) => ({ ...s, [role]: { file, label, status: 'error', error: e instanceof ApiError ? e : new ApiError(0, 'error', String(e)) } }));
     }
   }
+  const onFile = (role: Role, file: File) => load(role, file.name, file, (t) => workspaceApi.upload(t, file, file.name));
+  const onImport = (role: Role, src: PublicSource) => load(role, `a snapshot of ${src.title}`, undefined, (t) => workspaceApi.importArcgis(t, src.id));
+
+  // Curated public layers come from the API (server-side allowlist).
+  const [sources, setSources] = useState<PublicSource[] | 'loading' | 'unavailable'>('loading');
+  useEffect(() => {
+    let live = true;
+    workspaceApi
+      .sources()
+      .then((s) => live && setSources(s))
+      .catch(() => live && setSources('unavailable'));
+    return () => {
+      live = false;
+    };
+  }, []);
 
   const b = slots.baseline;
   const p = slots.proposed;
@@ -207,7 +284,7 @@ export default function UploadDialog({
   }
 
   return (
-    <Dialog title="Try your own files" onClose={onClose} wide>
+    <Dialog title={startWithPublic ? 'Import a public layer' : 'Try your own files'} onClose={onClose} wide>
       <ApiStatus />
       <p>
         Upload two GeoJSON point inventories in WGS84 (EPSG:4326). They are stored in a private, anonymous live workspace that expires 72 hours after
@@ -219,9 +296,25 @@ export default function UploadDialog({
         <a href={`${base}data/samples/proposed.geojson`} download>sample field inventory</a>. Other projections: in QGIS, use Export → Save Features As…,
         Format GeoJSON, CRS EPSG:4326. Coordinate ranges alone cannot prove a file is WGS84.
       </p>
+      {startWithPublic && (
+        <p className="hint">
+          A snapshot reads every point from a curated, explicitly public ArcGIS layer at this moment; GeoDiff never writes to the source. Compare an older
+          snapshot with a newer one (or with your own file) to see what changed between them. Differences reflect the published layer at those two
+          times, not changes verified or reported by GeoDiff.
+        </p>
+      )}
       <div className="ds-grid">
         {(['baseline', 'proposed'] as Role[]).map((r) => (
-          <DatasetCard key={r} role={r} slot={slots[r]} onFile={(f) => void onFile(r, f)} onIdField={(f) => setSlots((s) => ({ ...s, [r]: { ...s[r], idField: f } }))} />
+          <DatasetCard
+            key={r}
+            role={r}
+            slot={slots[r]}
+            onFile={(f) => void onFile(r, f)}
+            onImport={(src) => void onImport(r, src)}
+            sources={sources}
+            publicFirst={startWithPublic}
+            onIdField={(f) => setSlots((s) => ({ ...s, [r]: { ...s[r], idField: f } }))}
+          />
         ))}
       </div>
       {fields && (

@@ -171,3 +171,79 @@ GitHub sync
 - Still blocked on the `workflow` token scope (current scopes: gist, read:org, repo).
 
 Next: Phase 5, public ArcGIS snapshots and the guided static sample.
+
+## Phase 5: Public ArcGIS snapshots and guided demo (implemented, tested locally; not pushed)
+
+Guided sample (default entry, works with no API)
+- `geodiff sample` (`make sample`) runs the Python engine on committed, seeded synthetic inputs
+  (400 approved and 401 field assets, Cedar Hollow, fictional) and writes
+  `fixtures/demo/sample.json`. The file holds the normalized baseline snapshot and three exact
+  preset runs (1, 2, 5 m) with evidence and patches, plus a bundle hash.
+- At 2 m the sample has 50 affected assets and 54 components (8 added, 7 removed, 14 moved,
+  25 edited), with 73 within-tolerance motions. These equal the generator's injected ground
+  truth exactly (`test_sample_matches_generator_manifest`).
+- `SampleAdapter` implements the same `ReviewAdapter` as the live API: versions, 409 stale
+  decisions, note-required flags, count-confirmed bulk actions, undo by revision. Decisions
+  are kept in localStorage (memory fallback), separately per preset, and synced across tabs
+  before each write.
+- `lib/resolve.ts` ports the Python resolver.
+- The default URL opens the sample with BENCH-0142 selected and framed, plus a guided hint.
+  The hint's geography was checked against the context layers: the approved point is in
+  Pecan Hollow Park, and the move crosses 11th St.
+- Hash routes (`#/sample/<asset>?t=2`, `#/live/<asset>`) keep deep links refresh-safe on
+  static hosting.
+- Toolbar actions: preset picker, Reset sample, Try your own files, Import public layer, and
+  Live workspace when one exists. The sample is labeled synthetic in the toolbar, the report
+  and the attribution.
+
+Curated ArcGIS importer (live workspace)
+- `api/geodiff/arcgis.py` with the manifest `api/geodiff/sources.json`; details and verified
+  facts are in [SOURCES.md](SOURCES.md). Source: NPS Yosemite Points of Interest. Reuse basis:
+  U.S. federal work; verified 2026-11-18; asset ID `GlobalID`.
+- Endpoints `GET /v1/sources` and `POST /v1/datasets/arcgis`. The upload dialog offers "Take a
+  snapshot now" per slot and shows provenance. The map attribution credits the data source;
+  identical snapshots explain why they show no changes.
+- Rejected candidates (Fairfax, Austin, Fort Worth, Dallas) are documented with reasons.
+
+Commands and results (2026-11-18)
+- `make check-api`: **129 passed**, 1 skipped (network). New tests: `test_sample.py` (3:
+  committed bundle is current, story/presets, ground truth), `test_arcgis.py` (13 offline:
+  paging in `maxRecordCount` batches, Esri JSON normalization, feature cap, geometry/capability/
+  ID-field checks, retry then success, persistent failure, 404/redirect/token/error body/non-JSON,
+  drift retried once then committed, continuous drift fails, out-of-layer request refused,
+  manifest HTTPS check), `test_api_arcgis.py` (5: listing, snapshot + provenance + second
+  snapshot compare + dedupe, failed import stores nothing, unknown source / URL injection,
+  auth required).
+- Live source check: `GEODIFF_NETWORK=1 pytest -k live`: **passed**. 552 features, valid,
+  `GlobalID` usable; retrieved 2026-11-19T00:14:48Z; service last edit 2026-11-18T12:31:06Z.
+- `npx vitest run`: **17 passed**. Browser resolver parity: the draft GeoJSON and full report
+  equal the Python reference at 1, 2 and 5 m with a mixed decision set covering all four
+  dispositions; the golden decisions reproduce `expected_reviewed.geojson` exactly. Also
+  covered: code-point ID ordering, adapter semantics, and route round-trips.
+- `npx playwright test` against `docker compose up --build`, with `E2E_NETWORK=1`: **13
+  passed**. New:
+  1. API blocked (every request to :8000 aborted) in a fresh context: the sample opens on
+     BENCH-0142 (`#/sample/BENCH-0142?t=2`, 119.6 m label, 50 assets / 54 decisions); axe
+     clean; accept condition and reject move; reload keeps decisions; draft export has 400
+     features with BENCH-0142 `damaged` at the approved coordinates; the report says
+     `SYNTHETIC`; reset clears; presets 1 m and 5 m give 91 and 51 decisions; **zero API
+     requests**; no console errors.
+  2. Direct link to an added asset survives reload; an unknown ID shows a clear message.
+  3. 390 px: map tab with the BENCH-0142 quick decision bar, no overflow.
+  4. Live upload with the API down: status says unavailable; nothing is rerouted to sample data.
+  5. Real network: two snapshots of the NPS layer through the live UI, `GlobalID`
+     preselected, comparison opens in live mode. They are identical seconds apart, so there
+     are 0 changes and the UI explains why.
+- Screenshots refreshed in `docs/screenshots/` (including `sample-390.png` and
+  `live-public-layer.png`).
+
+Notes
+- The compose stack (local only) raises `MAX_ACTIVE_WORKSPACES` to 5000 and
+  `RATE_LIMIT_WORKSPACES_PER_HOUR` to 1000 for repeated e2e runs. A run hit the 200-workspace
+  default, and the UI showed the intended capacity message. Production defaults are unchanged.
+- CI skips the two network-dependent tests; they were run locally as listed above.
+
+GitHub sync
+- Still blocked on the `workflow` token scope.
+
+Next: Phase 6, validation and portfolio evidence.

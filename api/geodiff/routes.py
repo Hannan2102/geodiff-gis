@@ -12,7 +12,7 @@ from fastapi import APIRouter, Depends, Header, Query, Request, Response
 from fastapi.concurrency import run_in_threadpool
 from pydantic import BaseModel, Field
 
-from geodiff import ratelimit, store
+from geodiff import arcgis, ratelimit, store
 from geodiff.auth import Workspace, current_workspace, hash_token, new_token
 from geodiff.config import get_settings
 from geodiff.db import get_pool
@@ -207,6 +207,53 @@ async def import_dataset(
     def work() -> tuple[dict[str, Any], bool]:
         with get_pool().connection() as conn:
             return store.import_dataset(conn, ws.id, _safe_filename(name), data)
+
+    dataset, duplicate = await run_in_threadpool(work)
+    response.status_code = 200 if duplicate else 201
+    return dataset | {"duplicate": duplicate}
+
+
+class ArcGISImportRequest(BaseModel):
+    source_id: str = Field(max_length=100)
+
+
+@router.get("/sources", tags=["datasets"])
+def list_sources() -> dict[str, Any]:
+    """Curated public ArcGIS point layers that can be snapshotted into a workspace."""
+    enabled = get_settings().arcgis_enabled
+    return {
+        "enabled": enabled,
+        "sources": [s.public() for s in arcgis.sources().values()] if enabled else [],
+    }
+
+
+@router.post("/datasets/arcgis", tags=["datasets"])
+async def import_arcgis(
+    ws: Auth, body: ArcGISImportRequest, request: Request, response: Response
+) -> dict[str, Any]:
+    """Snapshot a curated public layer (by ID only) into this workspace as a dataset."""
+    _write_guard(request)
+    if not get_settings().arcgis_enabled:
+        raise ApiError(503, "arcgis_disabled", "Public layer import is turned off here.", "")
+    src = arcgis.sources().get(body.source_id)
+    if src is None:
+        raise ApiError(
+            404,
+            "unknown_source",
+            "That public layer is not in the curated list.",
+            "Pick a listed source.",
+        )
+
+    def work() -> tuple[dict[str, Any], bool]:
+        try:
+            data, record = arcgis.Importer().snapshot(src, max_features=get_settings().max_features)
+        except arcgis.ArcGISError as exc:
+            raise ApiError(exc.status, exc.code, exc.message, exc.guidance) from exc
+        stamp = record["retrieved_at"][:10]
+        with get_pool().connection() as conn:
+            return store.import_dataset(
+                conn, ws.id, f"{src.id}-{stamp}.geojson", data, source=record
+            )
 
     dataset, duplicate = await run_in_threadpool(work)
     response.status_code = 200 if duplicate else 201

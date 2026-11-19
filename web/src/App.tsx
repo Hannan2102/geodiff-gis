@@ -1,13 +1,14 @@
 import { lazy, Suspense, useCallback, useEffect, useMemo, useState, useSyncExternalStore } from 'react';
 import { ApiError, LiveAdapter, liveSession, workspaceApi } from './adapters/live';
-import type { ReviewAdapter } from './adapters/types';
+import { loadSampleBundle, resetSample, SampleAdapter, type SampleBundle } from './adapters/sample';
 import DecisionBar from './components/DecisionBar';
 import Evidence from './components/Evidence';
 import FallbackTable from './components/FallbackTable';
 import Queue from './components/Queue';
-import Toolbar from './components/Toolbar';
+import Toolbar, { type PresetControl } from './components/Toolbar';
 import Tour from './components/Tour';
 import UploadDialog from './components/UploadDialog';
+import { parseRoute, replaceRoute, type Route } from './lib/route';
 import { webglAvailable } from './map/webgl';
 import { ReviewProvider, useReview } from './state/review';
 import type { ComparisonInfo } from './types';
@@ -78,11 +79,18 @@ export interface StudioActions {
   onSample?: () => void;
   onReset?: () => void;
   onImport?: () => void;
+  onLive?: () => void;
+  presets?: PresetControl;
 }
 
-function Studio(actions: StudioActions) {
+function Studio({ route, ...actions }: StudioActions & { route: (asset: string | null) => Route }) {
   const layout = useLayout();
   const { selectedId } = useReview();
+
+  // Keep the URL pointing at the selected asset so a refresh or shared link reopens it.
+  useEffect(() => {
+    replaceRoute(route(selectedId));
+  }, [route, selectedId]);
   const [tab, setTab] = useState<'map' | 'queue' | 'details'>('map');
   const [drawer, setDrawer] = useState(true);
   const gl = useMemo(() => webglAvailable(), []);
@@ -161,58 +169,148 @@ function Studio(actions: StudioActions) {
   );
 }
 
-function Start({ onUpload, onTour }: { onUpload: () => void; onTour: () => void }) {
-  return (
-    <main className="start">
-      <h1>GeoDiff</h1>
-      <p className="lede">
-        Reconcile a field inventory of point assets with last month’s approved inventory: review additions, removals, moves and edited fields, then
-        export the approved updates.
-      </p>
-      <div className="dialog-actions">
-        <button type="button" className="btn primary" onClick={onUpload} data-testid="try-files">
-          Try your own files
-        </button>
-        <button type="button" className="btn" onClick={onTour}>
-          Take the tour
-        </button>
-      </div>
-    </main>
-  );
+const MODE_KEY = 'geodiff.mode';
+function rememberMode(mode: 'sample' | 'live') {
+  try {
+    localStorage.setItem(MODE_KEY, mode);
+  } catch {
+    /* storage unavailable */
+  }
+}
+function rememberedMode(): string | null {
+  try {
+    return localStorage.getItem(MODE_KEY);
+  } catch {
+    return null;
+  }
 }
 
-type Session = { kind: 'none' } | { kind: 'live'; adapter: LiveAdapter };
+type Session = { kind: 'sample'; tolerance: number | null; asset: string | null } | { kind: 'live'; adapter: LiveAdapter; asset: string | null };
 
 function initialSession(): Session {
+  const r = parseRoute(window.location.hash);
   const t = liveSession.token();
   const c = liveSession.comparisonId();
-  return t && c ? { kind: 'live', adapter: new LiveAdapter(t, c) } : { kind: 'none' };
+  const wantsLive = r.mode === 'live' || (r.mode === null && rememberedMode() === 'live');
+  if (wantsLive && t && c) return { kind: 'live', adapter: new LiveAdapter(t, c), asset: r.asset };
+  return { kind: 'sample', tolerance: r.tolerance, asset: r.mode === 'sample' ? r.asset : null };
+}
+
+/** Guided sample: loads the bundled engine output once, then runs fully in this browser. */
+function SampleSession({
+  tolerance,
+  asset,
+  onTolerance,
+  actions,
+}: {
+  tolerance: number | null;
+  asset: string | null;
+  onTolerance: (t: number) => void;
+  actions: Omit<StudioActions, 'presets' | 'onReset'>;
+}) {
+  const [attempt, setAttempt] = useState(0);
+  const [loaded, setLoaded] = useState<{ bundle?: SampleBundle; error?: ApiError } | null>(null);
+  const [resetCount, setResetCount] = useState(0);
+
+  useEffect(() => {
+    let live = true;
+    loadSampleBundle()
+      .then((bundle) => live && setLoaded({ bundle }))
+      .catch((e: unknown) => live && setLoaded({ error: e instanceof ApiError ? e : new ApiError(0, 'sample_unavailable', String(e)) }));
+    return () => {
+      live = false;
+    };
+  }, [attempt]);
+
+  const bundle = loaded?.bundle;
+  const tol = bundle && bundle.presets.some((p) => p.tolerance_m === tolerance) ? tolerance! : (bundle?.default_tolerance_m ?? 2);
+  // A new adapter per preset or reset; resetCount is part of the identity on purpose.
+  const adapter = useMemo(() => (bundle ? new SampleAdapter(bundle, tol) : null), [bundle, tol, resetCount]); // eslint-disable-line react-hooks/exhaustive-deps
+  const route = useCallback((a: string | null): Route => ({ mode: 'sample', asset: a, tolerance: tol }), [tol]);
+
+  if (loaded?.error) {
+    return (
+      <div className="load-problem" role="alert">
+        <h2>The guided sample could not be loaded</h2>
+        <p>{loaded.error.message}</p>
+        <div className="dialog-actions">
+          <button type="button" className="btn primary" onClick={() => setAttempt((n) => n + 1)}>
+            Retry
+          </button>
+        </div>
+      </div>
+    );
+  }
+  if (!bundle || !adapter) {
+    return (
+      <p className="start" role="status">
+        Loading the guided sample…
+      </p>
+    );
+  }
+  const reset = () => {
+    if (!window.confirm('Reset the guided sample? This clears your sample decisions in this browser (all tolerance presets).')) return;
+    resetSample(bundle);
+    setResetCount((n) => n + 1);
+  };
+  return (
+    <ReviewProvider key={`sample:${tol}:${resetCount}`} adapter={adapter} initialSelection={asset ?? bundle.focus_asset ?? undefined}>
+      <Studio
+        {...actions}
+        route={route}
+        onReset={reset}
+        presets={{ values: bundle.presets.map((p) => p.tolerance_m), current: tol, onChange: onTolerance }}
+      />
+    </ReviewProvider>
+  );
 }
 
 export default function App() {
   const [session, setSession] = useState<Session>(initialSession);
-  const [uploading, setUploading] = useState(false);
+  const [uploading, setUploading] = useState<false | 'files' | 'public'>(false);
   const [touring, setTouring] = useState(false);
   const [current, setCurrent] = useState<ComparisonInfo | null>(null);
 
-  const adapter: ReviewAdapter | null = session.kind === 'live' ? session.adapter : null;
+  const liveAdapter = session.kind === 'live' ? session.adapter : null;
 
   useEffect(() => {
-    if (!adapter) return;
+    if (!liveAdapter) return;
     let live = true;
-    adapter
+    liveAdapter
       .comparison()
       .then((i) => live && setCurrent(i))
       .catch(() => undefined);
     return () => {
       live = false;
     };
-  }, [adapter]);
+  }, [liveAdapter]);
+
+  const openSample = useCallback(() => {
+    rememberMode('sample');
+    setSession({ kind: 'sample', tolerance: null, asset: null });
+  }, []);
+
+  // Return to this browser's live workspace, if one exists.
+  const hasLive = !!(liveSession.token() && liveSession.comparisonId());
+  const openLive = useMemo(
+    () =>
+      hasLive
+        ? () => {
+            const t = liveSession.token();
+            const c = liveSession.comparisonId();
+            if (!t || !c) return;
+            rememberMode('live');
+            setSession({ kind: 'live', adapter: new LiveAdapter(t, c), asset: null });
+          }
+        : undefined,
+    [hasLive],
+  );
 
   const onCompared = useCallback((token: string, info: ComparisonInfo) => {
     setUploading(false);
     setCurrent(info);
-    setSession({ kind: 'live', adapter: new LiveAdapter(token, info.comparison_id) });
+    rememberMode('live');
+    setSession({ kind: 'live', adapter: new LiveAdapter(token, info.comparison_id), asset: null });
   }, []);
 
   const resetLive = useCallback(async () => {
@@ -228,21 +326,33 @@ export default function App() {
     }
     liveSession.save(null, null);
     setCurrent(null);
-    setSession({ kind: 'none' });
-  }, []);
+    openSample();
+  }, [openSample]);
 
-  const key = session.kind === 'live' ? `live:${session.adapter.comparisonId}` : 'none';
+  const liveRoute = useCallback((a: string | null): Route => ({ mode: 'live', asset: a, tolerance: null }), []);
+  const common = {
+    onUpload: () => setUploading('files'),
+    onImport: () => setUploading('public'),
+    onTour: () => setTouring(true),
+  };
 
   return (
     <>
-      {adapter ? (
-        <ReviewProvider key={key} adapter={adapter}>
-          <Studio onUpload={() => setUploading(true)} onTour={() => setTouring(true)} onReset={() => void resetLive()} />
+      {session.kind === 'live' ? (
+        <ReviewProvider key={`live:${session.adapter.comparisonId}`} adapter={session.adapter} initialSelection={session.asset ?? undefined}>
+          <Studio {...common} route={liveRoute} onSample={openSample} onReset={() => void resetLive()} />
         </ReviewProvider>
       ) : (
-        <Start onUpload={() => setUploading(true)} onTour={() => setTouring(true)} />
+        <SampleSession
+          tolerance={session.tolerance}
+          asset={session.asset}
+          onTolerance={(t) => setSession({ kind: 'sample', tolerance: t, asset: null })}
+          actions={{ ...common, onLive: openLive }}
+        />
       )}
-      {uploading && <UploadDialog onClose={() => setUploading(false)} onCompared={onCompared} current={current} />}
+      {uploading && (
+        <UploadDialog onClose={() => setUploading(false)} onCompared={onCompared} current={session.kind === 'live' ? current : null} startWithPublic={uploading === 'public'} />
+      )}
       {touring && <Tour onClose={() => setTouring(false)} />}
     </>
   );

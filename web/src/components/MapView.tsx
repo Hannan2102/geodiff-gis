@@ -1,4 +1,4 @@
-import { AttributionControl, LngLatBounds, Map as MLMap, Marker, NavigationControl, ScaleControl, setWorkerUrl, type GeoJSONSource, type MapMouseEvent } from 'maplibre-gl';
+import { LngLatBounds, Map as MLMap, Marker, NavigationControl, ScaleControl, setWorkerUrl, type GeoJSONSource, type MapMouseEvent } from 'maplibre-gl';
 import 'maplibre-gl/dist/maplibre-gl.css';
 import workerUrl from 'maplibre-gl/dist/maplibre-gl-worker.mjs?url';
 import type { Feature, FeatureCollection } from 'geojson';
@@ -54,6 +54,11 @@ export default function MapView() {
   const [mapError, setMapError] = useState<string | null>(null);
   const [truncated, setTruncated] = useState(false);
   const extent = info?.extent ?? null;
+  // Credit any public source behind this run's inputs (deduplicated).
+  const sources = [info?.inputs.baseline.source, info?.inputs.proposed.source]
+    .filter((s): s is Record<string, unknown> => !!s && typeof s.item_url === 'string')
+    .map((s) => ({ url: String(s.item_url), label: String(s.attribution) }))
+    .filter((s, i, a) => a.findIndex((x) => x.url === s.url) === i);
 
   // Create the map once.
   useEffect(() => {
@@ -71,7 +76,6 @@ export default function MapView() {
     map.touchZoomRotate.disableRotation();
     map.addControl(new NavigationControl({ showCompass: false }), 'top-right');
     map.addControl(new ScaleControl({ unit: 'metric' }), 'bottom-left');
-    map.addControl(new AttributionControl({ compact: true, customAttribution: 'Context: synthetic Cedar Hollow grid (fictional) · GeoDiff' }), 'bottom-right');
     map.on('styleimagemissing', () => registerIcons(map));
     map.on('load', () => {
       registerIcons(map);
@@ -126,7 +130,12 @@ export default function MapView() {
           });
         })
         .catch(() => undefined);
-      if (map.getZoom() >= 14) {
+      // Approved positions give context: small inventories from zoom 6, large ones from 14.
+      const small = (info?.inputs.baseline.feature_count ?? Infinity) <= 2000;
+      const baselineSrc = map.getSource('baseline') as GeoJSONSource | undefined;
+      if (map.getZoom() < (small ? 6 : 14)) {
+        void baselineSrc?.setData({ type: 'FeatureCollection', features: [] });
+      } else {
         void adapter
           .baselinePoints(bbox)
           .then((pts) => {
@@ -149,7 +158,7 @@ export default function MapView() {
       clearTimeout(timer);
       map.off('moveend', onMove);
     };
-  }, [adapter, ready, mapVersion]);
+  }, [adapter, ready, mapVersion, info?.inputs.baseline.feature_count]);
 
   // Click to select; overlapping symbols open a chooser so nothing is hidden.
   useEffect(() => {
@@ -234,6 +243,23 @@ export default function MapView() {
         <li><KindSymbol kind="attribute" title="Attribute edit" /> Edit</li>
         <li><span className="legend-ring" aria-hidden="true" /> Approved position</li>
       </ul>
+      <p className="attrib">
+        {sources.length > 0 && (
+          <>
+            Data:{' '}
+            {sources.map((s, i) => (
+              <span key={s.url}>
+                {i > 0 && '; '}
+                <a href={s.url} target="_blank" rel="noreferrer">
+                  {s.label}
+                </a>
+              </span>
+            ))}
+            {' · '}
+          </>
+        )}
+        Street grid: synthetic Cedar Hollow context (fictional, drawn near Dallas only)
+      </p>
       {truncated && <p className="map-note">Zoom in to see every change in this area.</p>}
       {chooser && (
         <div className="chooser" style={{ left: chooser.x, top: chooser.y }} role="dialog" aria-label="Overlapping assets">

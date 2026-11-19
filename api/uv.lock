@@ -133,6 +133,7 @@ version = "0.1.0"
 source = { editable = "." }
 dependencies = [
     { name = "fastapi" },
+    { name = "httpx" },
     { name = "numpy" },
     { name = "psycopg", extra = ["binary"] },
     { name = "psycopg-pool" },
@@ -149,7 +150,6 @@ analysis = [
 
 [package.dev-dependencies]
 dev = [
-    { name = "httpx" },
     { name = "mypy" },
     { name = "pytest" },
     { name = "ruff" },
@@ -159,6 +159,7 @@ dev = [
 requires-dist = [
     { name = "fastapi", specifier = "==0.165.0" },
     { name = "geopandas", marker = "extra == 'analysis'", specifier = "==1.2.0" },
+    { name = "httpx", specifier = "==0.28.1" },
     { name = "numpy", specifier = "==2.5.5" },
     { name = "psycopg", extras = ["binary"], specifier = "==3.3.9" },
     { name = "psycopg-pool", specifier = "==3.3.3" },
@@ -171,7 +172,6 @@ provides-extras = ["analysis"]
 
 [package.metadata.requires-dev]
 dev = [
-    { name = "httpx", specifier = "==0.28.1" },
     { name = "mypy", specifier = "==2.4.1" },
     { name = "pytest", specifier = "==9.2.0" },
     { name = "ruff", specifier = "==0.17.5" },

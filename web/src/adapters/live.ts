@@ -10,6 +10,7 @@ import type {
   FieldSuggestion,
   HistoryEvent,
   MapAsset,
+  PublicSource,
   QueueFilter,
   QueueItem,
 } from '../types';
@@ -108,6 +109,13 @@ export const workspaceApi = {
       headers: { 'Content-Type': 'application/geo+json' },
       timeoutMs: 90_000,
     });
+  },
+  async sources(): Promise<PublicSource[]> {
+    const r = await request<{ enabled: boolean; sources: PublicSource[] }>('/v1/sources', { timeoutMs: 60_000 });
+    return r.enabled ? r.sources : [];
+  },
+  importArcgis(token: string, sourceId: string): Promise<DatasetSummary> {
+    return request<DatasetSummary>('/v1/datasets/arcgis', { method: 'POST', token, body: JSON.stringify({ source_id: sourceId }), timeoutMs: 120_000 });
   },
   suggestFields(token: string, baseline: string, proposed: string, bid: string, pid: string): Promise<FieldSuggestion> {
     const q = new URLSearchParams({ baseline, proposed, baseline_id_field: bid, proposed_id_field: pid });

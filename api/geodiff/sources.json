@@ -1,0 +1,20 @@
+{
+  "schema": "geodiff.sources/1",
+  "note": "Curated public ArcGIS point layers. Only these exact HTTPS layer URLs can be imported; the browser never supplies a URL.",
+  "sources": [
+    {
+      "id": "nps-yose-poi",
+      "title": "Yosemite National Park: Points of Interest",
+      "owner": "National Park Service, Yosemite National Park GIS",
+      "layer_url": "https://services1.arcgis.com/fBc8EJBxQRMcHlei/arcgis/rest/services/YOSE_PointsOfInterest/FeatureServer/0",
+      "item_url": "https://www.arcgis.com/home/item.html?id=dc050222c1ee45f3b5e366bdc2cebfa2",
+      "id_field": "GlobalID",
+      "id_note": "GlobalID is the persistent feature ID (unique, never null at verification). OBJECTID is server-assigned and can change if the layer is republished; FEATUREID had 15 duplicate values at verification.",
+      "reuse": "Work of the U.S. federal government (17 U.S.C. 105): no U.S. copyright. Published with the NPS data disclaimer (no warranty; obtain the data directly from an NPS server, which this importer does).",
+      "attribution": "National Park Service, Yosemite National Park GIS",
+      "verified_on": "2026-11-18",
+      "verified_facts": "Public item; capabilities Query only; esriGeometryPoint; 552 features; maxRecordCount 1000; GeoJSON supported; item modified 2026-06-01.",
+      "suggested_compare_fields": ["POINAME", "POITYPE", "ISSEASONALLYCLOSED", "PUBLICDISPLAY", "VISITORACCESS"]
+    }
+  ]
+}

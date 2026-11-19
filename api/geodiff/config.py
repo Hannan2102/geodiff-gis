@@ -28,6 +28,7 @@ class Settings(BaseSettings):
     max_active_workspaces: int = 200
     workspace_ttl_hours: int = 72
     page_max: int = 200
+    arcgis_enabled: bool = True
     map_max_features: int = 2_000
     bulk_max: int = 5_000
     rate_limit_writes_per_min: int = 120

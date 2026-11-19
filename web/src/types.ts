@@ -184,6 +184,36 @@ export interface MapAsset {
   distance_m: number | null;
 }
 
+export interface PublicSource {
+  id: string;
+  title: string;
+  owner: string;
+  layer_url: string;
+  item_url: string;
+  id_field: string;
+  id_note: string;
+  reuse: string;
+  attribution: string;
+  verified_on: string;
+  suggested_compare_fields: string[];
+}
+
+/** Provenance recorded with an imported public-layer snapshot. */
+export interface SourceRecord {
+  source_id: string;
+  title: string;
+  owner: string;
+  layer_url: string;
+  item_url: string;
+  attribution: string;
+  reuse: string;
+  retrieved_at: string;
+  feature_count: number;
+  id_field: string;
+  id_note: string;
+  service_last_edit: string | null;
+}
+
 export interface DatasetSummary {
   dataset_id: string;
   name: string;
@@ -192,6 +222,7 @@ export interface DatasetSummary {
   feature_count: number;
   valid: boolean;
   duplicate?: boolean;
+  source?: SourceRecord | null;
   summary: {
     fields: { name: string; present: number; null: number; coverage: number; types: string[]; scalar: boolean }[];
     candidate_id_fields: string[];

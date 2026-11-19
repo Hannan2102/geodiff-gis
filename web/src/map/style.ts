@@ -41,8 +41,7 @@ export function proofStyle(): StyleSpecification {
         id: 'baseline',
         type: 'circle',
         source: 'baseline',
-        minzoom: 14,
-        paint: { 'circle-radius': 2.2, 'circle-color': '#8c9191', 'circle-opacity': 0.55 },
+        paint: { 'circle-radius': ['interpolate', ['linear'], ['zoom'], 6, 1.4, 16, 2.6], 'circle-color': '#8c9191', 'circle-opacity': 0.55 },
       },
       {
         id: 'changes',

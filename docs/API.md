@@ -54,6 +54,17 @@ Every response carries an `X-Request-ID` header.
 - `GET /v1/datasets/{id}/original` returns the exact uploaded bytes, to the owning workspace
   only.
 
+### Public ArcGIS layers
+
+- `GET /v1/sources` (no auth): lists the curated public layers with owner, reuse basis and
+  verification date. An empty list means the import is disabled (`ARCGIS_ENABLED=false`).
+- `POST /v1/datasets/arcgis` `{"source_id": "nps-yose-poi"}` snapshots the layer into this
+  workspace as a normal dataset with a `source` provenance record. It returns 201, or 200 when
+  identical bytes already exist. Errors: `unknown_source` (404), `unsupported_geometry`,
+  `source_too_large` and `source_empty` (422), `source_not_public`, `source_unavailable`,
+  `source_changed`, `redirect_rejected` and `source_http_error` (502). A failed import stores
+  nothing. See [SOURCES.md](SOURCES.md).
+
 ## Comparisons
 
 - `POST /v1/comparisons` takes
