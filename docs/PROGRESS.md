@@ -348,3 +348,31 @@ walkthrough recorder) on the rebuilt stack; eslint and tsc clean.
 
 Waiting on: Supabase project and Render Blueprint setup in the owner's accounts (DEPLOY.md
 steps 1 and 2).
+
+### Deployment (2026-11-20)
+
+- The owner created the Supabase project (Free, `us-east-2`, Data API off) and the Render
+  Blueprint (Free, Ohio). `DATABASE_URL` was entered only in Render's dashboard.
+- The first deploy failed: the pasted `DATABASE_URL` ended with a newline, which libpq rejected
+  (`invalid sslmode value: "require\n"`). Fixed in `1ceb1f8`: settings are trimmed, with a test.
+- Live: https://hannan2102.github.io/geodiff-gis/ (Pages) and https://geodiff-api.onrender.com
+  (Render). `/ready` and `version.txt` both report `1ceb1f8`. Production database: PostgreSQL
+  17.12, PostGIS 3.3.7, migrations 0001 to 0003 applied.
+- From outside: plain HTTP redirects to HTTPS; CORS allows only `https://hannan2102.github.io`
+  (no allow-origin header for other origins); errors are structured with no stack traces.
+- `web/e2e/deployed.spec.ts` against production from fresh browser contexts: **3 passed**.
+  1. Sample: HTTPS, map and the 119.6 m label, draft export with 400 features, a direct link
+     surviving reload, zero API requests, no console errors or failed assets.
+  2. 390 px: map, quick decision bar, no horizontal overflow.
+  3. Live: upload the golden pair; accept BENCH-0142's condition and reject its move; finish
+     all 9 decisions. The final export equals `expected_reviewed.geojson`. Reimporting it and
+     comparing with the expected file gives 0 components over 13 matched assets. A second
+     fresh context gets 404 for the first workspace's comparison and export, and 401 without a
+     token. Both workspaces were deleted and return 401 afterwards.
+- The first run of check 3 failed in the test itself: it toggled field checkboxes before the
+  suggestions had arrived over the network. The app was fine (Compare stays disabled until
+  then). The test now waits. The workspace that run left behind was deleted using its token
+  from the local trace, and the trace was removed.
+- Screenshots: `docs/screenshots/deployed-*.png`.
+- Not yet measured: a real wake-from-sleep time on Render. The first attempt was stopped so
+  this commit could be pushed, and pushing restarts the service.

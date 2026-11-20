@@ -7,9 +7,11 @@ containing only the approved updates. Source files are never modified.
 
 ![GeoDiff review studio: BENCH-0142's reported position 119.6 m from its approved position](docs/screenshots/studio-1440.png)
 
-- **Public demo:** not deployed yet (Phase 7). Until then, run it locally (below).
+- **Public demo:** https://hannan2102.github.io/geodiff-gis/. It opens on the guided sample, which
+  runs entirely in your browser. **Try your own files** uses the live API, which sleeps when idle
+  and can take about a minute to wake on the first request.
 - **Walkthrough video (68 s, no audio):** [docs/media/walkthrough.webm](docs/media/walkthrough.webm)
-- Stack: React 19 + TypeScript + Vite + MapLibre GL JS · FastAPI · PostgreSQL 17 / PostGIS 3.5 ·
+- Stack: React 19 + TypeScript + Vite + MapLibre GL JS · FastAPI · PostgreSQL 17 / PostGIS (3.5 locally, 3.3 on Supabase) ·
   pyproj · Shapely
 
 Two modes:
@@ -19,6 +21,16 @@ Two modes:
   engine, and keeps decisions in local storage. It works with the API down.
 - **Live workspace:** upload your own GeoJSON, or snapshot a curated public ArcGIS layer (NPS
   Yosemite points of interest). Data lives in a private, temporary workspace on the API.
+
+## Try the demo
+
+1. Open https://hannan2102.github.io/geodiff-gis/. The sample opens on bench BENCH-0142: the field
+   report moves it 119.6 m out of the park and marks it damaged.
+2. Accept the condition change, reject the move, then use **Export → Draft** to download the
+   reconciled inventory and its report. Decisions stay in your browser; **Reset sample** clears them.
+3. For live mode, choose **Try your own files** and download the two sample files linked in the
+   dialog (or use your own WGS84 GeoJSON points). Your workspace is private and is deleted 72
+   hours after last use, or immediately with **Delete workspace**.
 
 ## Run locally
 
@@ -92,11 +104,12 @@ browser (React, MapLibre)
 - **Speed:** a 5,000-asset compare takes 31 ms of engine time. Through the API (loopback
   HTTP + PostGIS) it takes 376 ms; a 200-asset queue page takes 38 ms; a draft export takes
   182 ms. 10,000 assets compare in 78 ms of engine time.
-- **Tests:** 129 API tests against real PostGIS, 17 browser unit tests, and 13 Playwright
+- **Tests:** 136 API tests against real PostGIS, 17 browser unit tests, and 13 Playwright
   journeys (including accessibility scans with axe, keyboard-only review, 390 px phone width,
   no WebGL, API outage, and the sample with every API request blocked). CI runs them on each
   push, except one API test and one Playwright journey that need the real ArcGIS server and
-  were run locally.
+  were run locally. A separate Playwright check (`e2e/deployed.spec.ts`) verifies the public
+  deployment end to end.
 
 ### Limitations
 
@@ -118,4 +131,5 @@ browser (React, MapLibre)
 - [docs/SOURCES.md](docs/SOURCES.md): the public ArcGIS source and why others were rejected
 - [docs/BENCHMARKS.md](docs/BENCHMARKS.md): method, environment and results
 - [docs/DEPLOY.md](docs/DEPLOY.md): free-tier hosting, setup, rollback and backups
+- Live API (for developers): https://geodiff-api.onrender.com, status at `/ready`
 - [docs/PROGRESS.md](docs/PROGRESS.md): phase-by-phase build log with verification
