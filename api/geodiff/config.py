@@ -2,7 +2,7 @@
 
 from functools import lru_cache
 
-from pydantic import AliasChoices, Field
+from pydantic import AliasChoices, Field, field_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
@@ -40,6 +40,12 @@ class Settings(BaseSettings):
     # "cf-connecting-ip" on Render (Cloudflare in front). Empty: use the TCP peer address.
     # Never X-Forwarded-For: Render appends to it, so its first entry is client-controlled.
     client_ip_header: str = ""
+
+    @field_validator("database_url", "cors_origins", "client_ip_header", mode="before")
+    @classmethod
+    def _strip(cls, v: object) -> object:
+        """Dashboard pastes often carry a trailing newline, which libpq rejects."""
+        return v.strip() if isinstance(v, str) else v
 
     @property
     def cors_origin_list(self) -> list[str]:

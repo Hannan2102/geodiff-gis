@@ -42,3 +42,11 @@ def test_git_sha_from_render(monkeypatch) -> None:
     monkeypatch.setenv("RENDER_GIT_COMMIT", "abc1234")
     assert Settings().git_sha == "abc1234"
     get_settings.cache_clear()
+
+
+def test_pasted_settings_are_trimmed(monkeypatch) -> None:
+    monkeypatch.setenv("DATABASE_URL", "postgresql://u:p@h:5432/db?sslmode=require\n")
+    monkeypatch.setenv("CORS_ORIGINS", " https://hannan2102.github.io\n")
+    s = Settings()
+    assert s.database_url.endswith("sslmode=require")
+    assert s.cors_origin_list == ["https://hannan2102.github.io"]
